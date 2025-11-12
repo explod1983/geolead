@@ -11,8 +11,15 @@
     <nav class="nav">
       <a href="/" class="brand">🌍 GeoGuessr Leaderboard</a>
       <div class="spacer"></div>
-      <a href="/">Leaderboard</a>
-      <a href="/submit" class="btn">Submit score</a>
+
+      {% if request.session.get('user_email') %}
+        <span class="hello">Hi, {{ request.session.get('user_name') }}</span>
+        <a href="/submit" class="btn">Submit</a>
+        <a href="/logout" class="btn ghost">Logout</a>
+      {% else %}
+        <a href="/register" class="btn">Registration</a>
+        <a href="/login" class="btn ghost">Login</a>
+      {% endif %}
     </nav>
   </header>
 

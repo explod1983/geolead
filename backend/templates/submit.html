@@ -1,10 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
   <h1>Submit score</h1>
+  <p class="muted">Submitting as <strong>{{ me.name }}</strong></p>
   <form class="form" method="post" action="/submit">
-    <label>Name
-      <input name="player_name" required />
-    </label>
     <label>Score - Round 1
       <input type="number" name="round1" min="0" max="5000" required />
     </label>
