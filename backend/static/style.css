@@ -1,0 +1,37 @@
+:root { --radius: 14px; --bg: #0e0f12; --card: #16181d; --muted: #9aa0a6; --text: #e8eaed; --accent: #6ea8fe; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+
+.site-header { position: sticky; top: 0; background: #111318; border-bottom: 1px solid #24262b; }
+.nav { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
+.nav .brand { font-weight: 700; text-decoration: none; color: var(--text); }
+.nav a { color: var(--muted); text-decoration: none; }
+.nav a:hover { color: var(--text); }
+.nav .spacer { flex: 1; }
+
+.container { max-width: 1120px; margin: 24px auto; padding: 0 16px; }
+.footer { max-width: 1120px; margin: 32px auto; padding: 12px 16px; color: var(--muted); border-top: 1px solid #24262b; }
+
+.flash { background: #152a12; border: 1px solid #1f4b18; color: #b7f397; padding: 10px 12px; border-radius: 10px; margin-bottom: 16px; }
+
+.cards { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 900px) { .cards { grid-template-columns: 1fr 1fr 1fr; } }
+.card { background: var(--card); border: 1px solid #24262b; border-radius: var(--radius); padding: 12px; }
+.card h2 { margin-top: 4px; }
+
+.table { width: 100%; border-collapse: collapse; background: transparent; border-radius: var(--radius); overflow: hidden; }
+.table th, .table td { padding: 8px 10px; border-bottom: 1px solid #22252b; }
+.table th { text-align: left; color: var(--muted); font-weight: 600; background: #171a20; }
+.table td.num, .table th.num { text-align: right; }
+.table tbody tr:hover { background: #1a1d24; }
+.table .muted { text-align: center; color: var(--muted); padding: 18px; }
+
+.form { display: grid; gap: 12px; background: var(--card); padding: 16px; border-radius: var(--radius); border: 1px solid #24262b; }
+.form label { display: grid; gap: 6px; }
+.form input, .form select { background: #0f1116; color: var(--text); border: 1px solid #2b2e35; border-radius: 8px; padding: 10px 12px; }
+.form .hint { color: var(--muted); font-size: 12px; margin-top: -4px; }
+.actions { display: flex; gap: 8px; margin-top: 4px; }
+
+.btn { display: inline-block; background: var(--accent); color: #0a0c10; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 700; text-decoration: none; cursor: pointer; }
+.btn:hover { filter: brightness(1.05); }
+.btn.ghost { background: transparent; color: var(--text); border: 1px solid #2b2e35; }

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Submit score</h1>
+  <form class="form" method="post" action="/submit">
+    <label>Name
+      <input name="player_name" required />
+    </label>
+    <label>Score - Round 1
+      <input type="number" name="round1" min="0" max="5000" required />
+    </label>
+    <label>Score - Round 2
+      <input type="number" name="round2" min="0" max="5000" required />
+    </label>
+    <label>Score - Round 3
+      <input type="number" name="round3" min="0" max="5000" required />
+    </label>
+
+    <p class="hint">Total and date are added automatically.</p>
+
+    <div class="actions">
+      <button class="btn" type="submit">Save</button>
+      <a class="btn ghost" href="/">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

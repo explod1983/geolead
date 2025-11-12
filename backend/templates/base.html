@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GeoGuessr Leaderboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a href="/" class="brand">🌍 GeoGuessr Leaderboard</a>
+      <div class="spacer"></div>
+      <a href="/">Leaderboard</a>
+      <a href="/submit" class="btn">Submit score</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">Made for friendly team competitions.</footer>
+</body>
+</html>
