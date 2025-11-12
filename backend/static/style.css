@@ -36,3 +36,10 @@ html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); f
 .btn { display: inline-block; background: var(--accent); color: #0a0c10; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 700; text-decoration: none; cursor: pointer; }
 .btn:hover { filter: brightness(1.05); }
 .btn.ghost { background: transparent; color: var(--text); border: 1px solid #2b2e35; }
+
+
+/* Ensure button text is readable even inside .nav */
+.nav a.btn { color: #0a0c10 !important; }
+.nav a.btn.ghost { color: var(--text) !important; }
+
+.flash.warn { background:#2a1512; border:1px solid #4b1f18; color:#f3b797; }

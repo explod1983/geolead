@@ -2,6 +2,10 @@
 {% block content %}
   <h1>Submit score</h1>
   <p class="muted">Submitting as <strong>{{ me.name }}</strong></p>
+
+  {% if limit_reached or request.query_params.get('limit') %}
+  <div class="flash warn">You've already submitted today. Try again tomorrow. ✋</div>
+  {% else %}
   <form class="form" method="post" action="/submit">
     <label>Score - Round 1
       <input type="number" name="round1" min="0" max="5000" required />
@@ -20,4 +24,5 @@
       <a class="btn ghost" href="/">Cancel</a>
     </div>
   </form>
+  {% endif %}
 {% endblock %}
