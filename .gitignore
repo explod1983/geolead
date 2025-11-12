@@ -12,7 +12,6 @@ venv/
 .idea/
 .vscode/
 geoguessr.db
-geoguessr*.db
 *.sqlite
 *.sqlite3
 *.log
