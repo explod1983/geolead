@@ -1,0 +1,30 @@
+
+{% extends "base.html" %}
+{% block content %}
+  <h1>Boards</h1>
+  <div class="cards">
+    <section class="card">
+      <h2>Create new board</h2>
+      {% if not request.session.get('user_email') %}
+        <p class="muted">You need to be logged in to create a board.</p>
+      {% else %}
+        <form class="form" method="post" action="/boards">
+          <label>Board name
+            <input name="name" placeholder="e.g. Team Alpha" required />
+          </label>
+          <div class="actions">
+            <button class="btn" type="submit">Create</button>
+          </div>
+        </form>
+      {% endif %}
+    </section>
+    <section class="card">
+      <h2>Existing boards</h2>
+      <ul class="list">
+        {% for b in boards %}
+          <li><a href="/board/{{ b.slug }}">{{ b.name }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+{% endblock %}

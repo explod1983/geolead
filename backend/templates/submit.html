@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% block content %}
   <h1>Submit score</h1>
@@ -7,6 +8,13 @@
   <div class="flash warn">You've already submitted today. Try again tomorrow. ✋</div>
   {% else %}
   <form class="form" method="post" action="/submit">
+    <label>Board
+      <select name="board_slug" required>
+        {% for b in boards %}
+          <option value="{{ b.slug }}" {% if b.slug == (last_board or 'global') %}selected{% endif %}>{{ b.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
     <label>Score - Round 1
       <input type="number" name="round1" min="0" max="5000" required />
     </label>
@@ -21,7 +29,7 @@
 
     <div class="actions">
       <button class="btn" type="submit">Save</button>
-      <a class="btn ghost" href="/">Cancel</a>
+      <a class="btn ghost" href="/board/global">Cancel</a>
     </div>
   </form>
   {% endif %}

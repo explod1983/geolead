@@ -1,17 +1,18 @@
+
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>GeoGuessr Leaderboard</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="{{ request.url_for('static', path='style.css') }}" />
 </head>
 <body>
   <header class="site-header">
     <nav class="nav">
-      <a href="/" class="brand">🌍 GeoGuessr Leaderboard</a>
+      <a href="/board/global" class="brand">🌍 GeoGuessr Leaderboard</a>
+      <a href="/boards" class="btn ghost small">Boards</a>
       <div class="spacer"></div>
-
       {% if request.session.get('user_email') %}
         <span class="hello">Hi, {{ request.session.get('user_name') }}</span>
         <a href="/submit" class="btn">Submit</a>
