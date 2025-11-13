@@ -100,7 +100,7 @@
                 <th>#</th>
                 <th>Player</th>
                 <th class="num">Total</th>
-                <th class="num">Average</th>
+                <th class="num">Av. round</th>
                 <th class="num">Max round</th>
               </tr>
             </thead>
@@ -113,7 +113,7 @@
                   <td>{{ r.rank }}</td>
                   <td>{{ r.player_name }}</td>
                   <td class="num">{{ '{:,}'.format(r.total_score) }}</td>
-                  <td class="num">{{ '{:,}'.format(r.average_score|round(0, 'floor')|int) }}</td>
+                  <td class="num">{{ '{:,}'.format(r.average_round | round(0, 'floor') | int) }}</td>
                   <td class="num">{{ r.max_round }}</td>
                 </tr>
                 {% endfor %}

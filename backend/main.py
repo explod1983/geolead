@@ -22,6 +22,7 @@ from sqlalchemy.orm import (
     sessionmaker, Session
 )
 from sqlalchemy.exc import IntegrityError
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 # ---------- Paths & DB ---------------------------------------------------------
 ROOT = Path(__file__).resolve().parent
@@ -86,6 +87,7 @@ ensure_global_board()
 
 # ---------- App & Templates ----------------------------------------------------
 app = FastAPI(title="GeoGuessr Leaderboard", version="0.6.3")
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 app.add_middleware(SessionMiddleware, secret_key="change-me-please-very-secret")
 
 static_dir = ROOT / "static"
@@ -145,7 +147,6 @@ def ensure_unique_slug(db: Session, base_slug: str) -> str:
     return slug
 
 def query_leaderboard(db: Session, board_id: Optional[int], period: Literal["all", "today", "week"]) -> list[dict]:
-    """If board_id is None -> aggregate across all boards (Global)."""
     since: Optional[datetime] = None
     now = utcnow()
     if period == "today":
@@ -176,15 +177,19 @@ def query_leaderboard(db: Session, board_id: Optional[int], period: Literal["all
     out: list[dict] = []
     for idx, r in enumerate(rows, start=1):
         best_round = max(int(r.max_r1 or 0), int(r.max_r2 or 0), int(r.max_r3 or 0))
+        avg_score = float(r.avg_score or 0.0)  # average *entry total*
+        avg_round = avg_score / 3.0            # per-round average
         out.append({
             "rank": idx,
             "player_name": r.player_name,
             "count": int(r.entries or 0),
             "total_score": int(r.total_score or 0),
-            "average_score": float(r.avg_score or 0.0),
+            "average_score": avg_score,   # used by All time / This week
+            "average_round": avg_round,   # used by Today
             "max_round": best_round,
         })
     return out
+
 
 # ---------- Routes -------------------------------------------------------------
 @app.get("/", include_in_schema=False)
