@@ -146,6 +146,52 @@ def ensure_unique_slug(db: Session, base_slug: str) -> str:
         i += 1
     return slug
 
+def fetch_player_entries(db: Session, player_id: int) -> list[dict]:
+    # Build a "day" key that works on SQLite and Postgres
+    dialect = db.get_bind().dialect.name
+    if "sqlite" in dialect:
+        day_expr = func.strftime("%Y-%m-%d", ScoreEntry.played_at)
+    else:
+        day_expr = func.date_trunc("day", ScoreEntry.played_at)
+
+    # Pick the ORIGINAL entry per day = the one with the smallest id for that day
+    first_of_day = (
+        select(func.min(ScoreEntry.id).label("entry_id"))
+        .where(ScoreEntry.player_id == player_id)
+        .group_by(day_expr)
+        .subquery("first_of_day")
+    )
+
+    rows = db.execute(
+        select(
+            ScoreEntry.played_at,
+            ScoreEntry.round1, ScoreEntry.round2, ScoreEntry.round3,
+            ScoreEntry.total_score,
+            Board.name.label("board_name"),
+            Board.slug.label("board_slug"),
+        )
+        .join(first_of_day, ScoreEntry.id == first_of_day.c.entry_id)
+        .join(Board, ScoreEntry.board_id == Board.id, isouter=True)
+        .order_by(ScoreEntry.played_at.desc())
+    ).all()
+
+    out: list[dict] = []
+    for r in rows:
+        dt: datetime = r.played_at
+        out.append({
+            "played_at": dt,
+            "day": dt.date().isoformat(),
+            "time": dt.strftime("%H:%M"),
+            "round1": int(r.round1 or 0),
+            "round2": int(r.round2 or 0),
+            "round3": int(r.round3 or 0),
+            "total": int(r.total_score or 0),
+            "board_name": r.board_name or "—",
+            "board_slug": r.board_slug or "",
+        })
+    return out
+
+
 def query_leaderboard(db: Session, board_id: Optional[int], period: Literal["all", "today", "week"]) -> list[dict]:
     now = utcnow()
     since: Optional[datetime] = None
@@ -207,18 +253,21 @@ def query_leaderboard(db: Session, board_id: Optional[int], period: Literal["all
         best_round = max(int(r.max_r1 or 0), int(r.max_r2 or 0), int(r.max_r3 or 0))
         avg_score = float(r.avg_score or 0.0)
         avg_round = avg_score / 3.0  # for Today table
+        # inside the for-loop that builds `out.append({...})`
         out.append({
             "rank": idx,
+            "player_id": r.pid,  # <-- add this line
             "player_name": r.player_name,
-            "count": int(r.entries or 0),             # <-- now counts unique days
-            "total_score": int(r.total_score or 0),   # sum of per-day totals
-            "average_score": avg_score,               # average per day
+            "count": int(r.entries or 0),
+            "total_score": int(r.total_score or 0),
+            "average_score": avg_score,
             "average_round": avg_round,
             "max_round": best_round,
             "round1": int(r.sum_r1 or 0),
             "round2": int(r.sum_r2 or 0),
             "round3": int(r.sum_r3 or 0),
         })
+
     return out
 
 # ---------- Routes -------------------------------------------------------------
@@ -533,3 +582,24 @@ async def api_submit_entry(payload: SubmitEntryIn, db: Session = Depends(get_db)
 @app.get("/health")
 async def health():
     return {"ok": True, "time": utcnow().isoformat()}
+
+@app.get("/me", response_class=HTMLResponse)
+async def my_stats(request: Request, db: Session = Depends(get_db)):
+    me = current_user(request, db)
+    if not me:
+        return templates.TemplateResponse("login_required.html", {"request": request})
+    entries = fetch_player_entries(db, me.id)
+    return templates.TemplateResponse("user_history.html", {
+        "request": request, "me": me, "player": me, "entries": entries
+    })
+
+@app.get("/player/{player_id}", response_class=HTMLResponse)
+async def player_stats(player_id: int, request: Request, db: Session = Depends(get_db)):
+    player = db.get(Player, player_id)
+    if not player:
+        raise HTTPException(404, "Player not found")
+    entries = fetch_player_entries(db, player.id)
+    me = current_user(request, db)
+    return templates.TemplateResponse("user_history.html", {
+        "request": request, "me": me, "player": player, "entries": entries
+    })

@@ -19,6 +19,9 @@
       {% if request.session.get('user_email') %}
         <span class="hello">Hi, {{ request.session.get('user_name') }}</span>
         {% set current = request.session.get('current_board_slug') %}
+        {% if me %}
+          <a href="/me" class="btn">My stats</a>
+        {% endif %}
         {% if current %}
           <a href="/board/{{ current }}/submit" class="btn">Submit</a>
         {% else %}
