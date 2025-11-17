@@ -4,13 +4,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GeoGuessr Leaderboard</title>
+  <title>GeoGuesser Leaderboard</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <header class="site-header">
     <nav class="nav">
-      <a href="/board/global" class="brand">🌍 GeoGuessr Leaderboard</a>
+      <a href="/board/global" class="brand">🌍 GeoGuesser Leaderboard</a>
       <a href="/boards" class="btn ghost small">Boards</a>
       {% if request.session.get('user_email') %}
       <a href="/boards" class="btn ghost small">Create board</a>

@@ -1,5 +1,5 @@
 
-# GeoGuessr Leaderboard — v6.3 (Postgres-ready)
+# GeoGuesser Leaderboard — v6.3 (Postgres-ready)
 
 - Uses `DATABASE_URL` for Postgres (falls back to local SQLite file if not set).
 - No SQLite-only PRAGMA calls; startup is DB-agnostic.

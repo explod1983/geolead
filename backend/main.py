@@ -86,7 +86,7 @@ def ensure_global_board() -> None:
 ensure_global_board()
 
 # ---------- App & Templates ----------------------------------------------------
-app = FastAPI(title="GeoGuessr Leaderboard", version="0.6.3")
+app = FastAPI(title="GeoGuesser Leaderboard", version="0.6.3")
 app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 app.add_middleware(SessionMiddleware, secret_key="change-me-please-very-secret")
 
