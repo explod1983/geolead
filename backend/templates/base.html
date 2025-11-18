@@ -40,5 +40,17 @@
   </main>
 
   <footer class="footer">Made by Oleksandr for friendly team competitions.</footer>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+  window.showToast = (msg, timeout = 1800) => {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => t.classList.remove('show'), timeout);
+  };
+</script>
+
 </body>
 </html>

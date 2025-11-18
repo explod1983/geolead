@@ -90,23 +90,27 @@
             </tbody>
           </table>
         </section>
-
-        <!-- Today (no Entries column) -->
-        <section class="card wide">
-          <h2>Today</h2>
-            <table class="table compact today">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Player</th>
-                  <th class="num">Round 1</th>
-                  <th class="num">Round 2</th>
-                  <th class="num">Round 3</th>
-                  <th class="num">Total</th>
-                  <th class="num"><abbr title="Average per round">Avg</abbr></th>
-                  <th class="num"><abbr title="Max single round">Max</abbr></th>
-                </tr>
-              </thead>
+        <!-- Today (full-width) -->
+        <section class="card wide" id="today-card">
+          <h2 style="display:flex;align-items:center;gap:8px;">
+            Today
+            <span class="share-actions">
+              <button class="btn small" id="copy-today">Share stats</button>
+            </span>
+          </h2>
+          <table class="table compact today">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th class="num">R1</th>
+                <th class="num">R2</th>
+                <th class="num">R3</th>
+                <th class="num">Total</th>
+                <th class="num"><abbr title="Average per round">Avg</abbr></th>
+                <th class="num"><abbr title="Max single round">Max</abbr></th>
+              </tr>
+            </thead>
             <tbody>
               {% if rows_today|length == 0 %}
                 <tr><td colspan="8" class="muted">No scores yet.</td></tr>
@@ -130,4 +134,34 @@
       </div>
     </section>
   </div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const card = document.getElementById('today-card');
+  const btn  = document.getElementById('copy-today');
+  if (!card || !btn) return;  // safety
+
+  async function renderCard(){
+    const actions = card.querySelector('.share-actions');
+    const prev = actions ? actions.style.display : '';
+    if (actions) actions.style.display = 'none';
+    const canvas = await html2canvas(card, { scale: 2, backgroundColor: null, useCORS: true });
+    if (actions) actions.style.display = prev || '';
+    return canvas;
+  }
+
+  btn.addEventListener('click', async () => {
+    try{
+      const canvas = await renderCard();
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      await navigator.clipboard.write([ new ClipboardItem({ 'image/png': blob }) ]);
+      showToast('Copied Today table as image ✅');
+    }catch(e){
+      console.error(e);
+      showToast('Could not copy image.');
+    }
+  });
+});
+</script>
 {% endblock %}

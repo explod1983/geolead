@@ -120,3 +120,24 @@ a:not(.btn):focus { color: #ffffff; text-decoration: underline; }
 .sidebar a:not(.btn) { color: #e5e7eb; }
 .sidebar a:not(.btn):hover { color: #fff; }
 
+/* Share buttons next to "Today" */
+.share-actions { margin-left: 8px; display: inline-flex; gap: 8px; }
+#today-card .share-actions .btn.small { padding: 4px 8px; }
+
+/* Toast */
+.toast{
+  position:fixed; bottom:16px; right:16px;
+  background:#1f2937; color:#e5e7eb;
+  border:1px solid rgba(255,255,255,.1);
+  padding:10px 14px; border-radius:10px;
+  box-shadow:0 6px 20px rgba(0,0,0,.3);
+  opacity:0; transform:translateY(10px);
+  pointer-events:none; z-index:9999;
+  transition:opacity .15s ease, transform .15s ease;
+  font-size:14px;
+}
+.toast.show{ opacity:1; transform:translateY(0); }
+
+/* Share buttons next to "Today" */
+.share-actions{ margin-left:8px; display:inline-flex; gap:8px; }
+#today-card .share-actions .btn.small{ padding:4px 8px; }
