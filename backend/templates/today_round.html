@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+  <h1>Today’s round · {{ board.name }}</h1>
+
+  {% if posts|length == 0 %}
+    <p class="muted">No posts yet for today.</p>
+  {% else %}
+    <div class="posts">
+      {% for p in posts %}
+      <article class="card post">
+        <header class="post-header">
+          <div class="post-title">
+            <span class="player">{{ p.name }}</span>
+            <span class="meta">
+              R1 {{ p.r1 }} · R2 {{ p.r2 }} · R3 {{ p.r3 }} ·
+              <strong>Total {{ '{:,}'.format(p.total) }}</strong>
+            </span>
+          </div>
+          <time class="time">{{ p.time }}</time>
+        </header>
+
+        <div class="rounds">
+          <div class="round">
+            <div class="round-head">R1</div>
+            {% if p.img1 %}
+              <img class="shot" src="{{ p.img1 }}" alt="R1 screenshot" loading="lazy">
+            {% else %}
+              <div class="shot shot-empty">No screenshot</div>
+            {% endif %}
+          </div>
+
+          <div class="round">
+            <div class="round-head">R2</div>
+            {% if p.img2 %}
+              <img class="shot" src="{{ p.img2 }}" alt="R2 screenshot" loading="lazy">
+            {% else %}
+              <div class="shot shot-empty">No screenshot</div>
+            {% endif %}
+          </div>
+
+          <div class="round">
+            <div class="round-head">R3</div>
+            {% if p.img3 %}
+              <img class="shot" src="{{ p.img3 }}" alt="R3 screenshot" loading="lazy">
+            {% else %}
+              <div class="shot shot-empty">No screenshot</div>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+{% endblock %}

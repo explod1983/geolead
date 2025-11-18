@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Today’s round · {{ board.name }}{% endblock %}
+{% block content %}
+<h1>Today’s round · {{ board.name }}</h1>
+<div class="card" style="max-width:680px;">
+  <p>You can view today’s posts after you submit your score to this board.</p>
+  <p style="margin-top:10px">
+    <a class="btn" href="/board/{{ board.slug }}/submit">Submit now</a>
+    <a class="btn ghost" href="/board/{{ board.slug }}" style="margin-left:8px;">Back to board</a>
+  </p>
+</div>
+{% endblock %}

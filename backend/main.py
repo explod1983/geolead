@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional, Literal, List
 
-from fastapi import FastAPI, Depends, Form, HTTPException, Request
+from fastapi import FastAPI, Depends, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -24,8 +24,17 @@ from sqlalchemy.exc import IntegrityError
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from fastapi.responses import FileResponse
 
+from sqlalchemy import inspect, text  # add these imports
+import uuid, shutil
+import re
+RETAIN_DAYS = int(os.getenv("UPLOAD_RETAIN_DAYS", "1"))  # keep only today by default
+
+
 # ---------- Paths & DB ---------------------------------------------------------
 ROOT = Path(__file__).resolve().parent
+
+STATIC_DIR = ROOT / "static"
+UPLOAD_DIR = STATIC_DIR / "uploads"
 
 DB_URL = os.getenv("DATABASE_URL")
 if DB_URL:
@@ -70,10 +79,68 @@ class ScoreEntry(Base):
     total_score: Mapped[int] = mapped_column(Integer)
     board_id: Mapped[Optional[int]] = mapped_column(ForeignKey("boards.id"), index=True, nullable=True)
 
+    # screenshots (per round)
+    screenshot_r1_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    screenshot_r2_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    screenshot_r3_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    # legacy single screenshot (kept for backward compat; optional)
+    screenshot_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
     player: Mapped[Player] = relationship(back_populates="entries")
+
+
 
 # Create tables if they don't exist
 Base.metadata.create_all(bind=engine)
+
+def ensure_round_shot_columns():
+    insp = inspect(engine)
+    cols = {c['name'] for c in insp.get_columns('score_entries')}
+    stmts = []
+    if 'screenshot_r1_path' not in cols:
+        stmts.append("ALTER TABLE score_entries ADD COLUMN screenshot_r1_path VARCHAR(255)")
+    if 'screenshot_r2_path' not in cols:
+        stmts.append("ALTER TABLE score_entries ADD COLUMN screenshot_r2_path VARCHAR(255)")
+    if 'screenshot_r3_path' not in cols:
+        stmts.append("ALTER TABLE score_entries ADD COLUMN screenshot_r3_path VARCHAR(255)")
+
+    if stmts:
+        with engine.begin() as conn:
+            for sql in stmts:
+                conn.exec_driver_sql(sql)   # one statement at a time (works on SQLite & Postgres)
+
+ensure_round_shot_columns()
+
+
+def ensure_se_column():
+    insp = inspect(engine)
+    cols = [c['name'] for c in insp.get_columns('score_entries')]
+    if 'screenshot_path' not in cols:
+        with engine.begin() as conn:
+            try:
+                conn.execute(text("ALTER TABLE score_entries ADD COLUMN screenshot_path VARCHAR(255)"))
+            except Exception:
+                pass
+
+def cleanup_old_uploads():
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    today = datetime.now(timezone.utc).date()
+    for p in UPLOAD_DIR.iterdir():
+        # only touch YYYYMMDD folders
+        if p.is_dir() and re.fullmatch(r"\d{8}", p.name):
+            try:
+                d = datetime.strptime(p.name, "%Y%m%d").date()
+            except ValueError:
+                continue
+            # delete anything not within the retention window
+            if (today - d).days >= RETAIN_DAYS:
+                shutil.rmtree(p, ignore_errors=True)
+
+
+ensure_se_column()
+cleanup_old_uploads()
+
 
 # Ensure a Global board exists (stats-only)
 def ensure_global_board() -> None:
@@ -91,7 +158,7 @@ app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 app.add_middleware(SessionMiddleware, secret_key="change-me-please-very-secret")
 
 static_dir = ROOT / "static"
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=str(ROOT / "templates"))
 
 def get_db() -> Session:
@@ -369,12 +436,16 @@ async def submit_form_for_board(slug: str, request: Request, db: Session = Depen
     if any_today:
         copy = ScoreEntry(
             player_id=me.id,
-            played_at=any_today.played_at,  # keep exact timestamp
+            played_at=any_today.played_at,
             round1=any_today.round1,
             round2=any_today.round2,
             round3=any_today.round3,
             total_score=any_today.total_score,
             board_id=board.id,
+            screenshot_r1_path=any_today.screenshot_r1_path,
+            screenshot_r2_path=any_today.screenshot_r2_path,
+            screenshot_r3_path=any_today.screenshot_r3_path,
+            screenshot_path=any_today.screenshot_path,  # legacy carry-over
         )
         db.add(copy)
         db.commit()
@@ -393,8 +464,12 @@ async def submit_post_for_board(
     round1: int = Form(...),
     round2: int = Form(...),
     round3: int = Form(...),
+    screenshot_r1: Optional[str] = Form(None),
+    screenshot_r2: Optional[str] = Form(None),
+    screenshot_r3: Optional[str] = Form(None),
     db: Session = Depends(get_db),
 ):
+
     me = current_user(request, db)
     if not me:
         return RedirectResponse(url=f"/login?next=%2Fboard%2F{slug}%2Fsubmit", status_code=303)
@@ -438,6 +513,10 @@ async def submit_post_for_board(
             round3=any_today.round3,
             total_score=any_today.total_score,
             board_id=board.id,
+            screenshot_r1_path=any_today.screenshot_r1_path,
+            screenshot_r2_path=any_today.screenshot_r2_path,
+            screenshot_r3_path=any_today.screenshot_r3_path,
+            screenshot_path=any_today.screenshot_path,  # legacy carry-over
         )
         db.add(copy)
         db.commit()
@@ -458,8 +537,12 @@ async def submit_post_for_board(
         played_at=utcnow(),
         round1=r1, round2=r2, round3=r3,
         total_score=total,
-        board_id=board.id
+        board_id=board.id,
+        screenshot_r1_path=screenshot_r1 or None,
+        screenshot_r2_path=screenshot_r2 or None,
+        screenshot_r3_path=screenshot_r3 or None,
     )
+
     db.add(entry)
     db.commit()
     request.session["current_board_slug"] = slug
@@ -611,3 +694,92 @@ async def new_board_form(request: Request, db: Session = Depends(get_db)):
         # only logged-in users can create boards
         return RedirectResponse(url="/login?next=%2Fboards%2Fnew", status_code=303)
     return templates.TemplateResponse("board_new.html", {"request": request, "me": me})
+
+@app.post("/api/paste_image")
+async def paste_image(request: Request):
+    # Purge old upload folders first (keeps only today if RETAIN_DAYS=1)
+    cleanup_old_uploads()
+
+    form = await request.form()
+    f: UploadFile | None = form.get("image")  # JS sends Clipboard image here
+    if not f:
+        raise HTTPException(400, "No image in form-data field 'image'")
+
+    ctype = (f.content_type or "").lower()
+    if ctype not in ("image/png", "image/jpeg", "image/webp"):
+        raise HTTPException(400, "Unsupported type")
+
+    data = await f.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(413, "Image too large (max 5 MB)")
+
+    day_dir = UPLOAD_DIR / datetime.now(timezone.utc).strftime("%Y%m%d")
+    day_dir.mkdir(parents=True, exist_ok=True)
+    ext = ".png" if "png" in ctype else (".jpg" if "jpeg" in ctype else ".webp")
+    name = f"{uuid.uuid4().hex}{ext}"
+    path = day_dir / name
+    with open(path, "wb") as out:
+        out.write(data)
+
+    url = f"/static/uploads/{day_dir.name}/{name}"
+    return {"ok": True, "url": url}
+
+@app.get("/board/{slug}/today", response_class=HTMLResponse)
+async def todays_round(slug: str, request: Request, db: Session = Depends(get_db)):
+    me = current_user(request, db)
+    if not me:
+        return RedirectResponse(url="/login?next=%2Fboard%2F" + slug + "%2Ftoday", status_code=303)
+
+    if slug == "global":
+        raise HTTPException(404, "Pick a specific board.")
+
+    board = get_board_by_slug(db, slug)
+    if not board:
+        raise HTTPException(404, "Board not found")
+
+    today = start_of_today_utc(utcnow())
+
+    # gate: only users who submitted to THIS board today may view
+    allowed = db.execute(
+        select(ScoreEntry.id).where(
+            ScoreEntry.player_id == me.id,
+            ScoreEntry.board_id == board.id,
+            ScoreEntry.played_at >= today
+        )
+    ).first()
+    if not allowed:
+        return templates.TemplateResponse("today_locked.html", {
+            "request": request, "me": me, "board": board
+        })
+
+    rows = db.execute(
+        select(
+            Player.name,
+            ScoreEntry.round1, ScoreEntry.round2, ScoreEntry.round3,
+            ScoreEntry.total_score,
+            ScoreEntry.screenshot_r1_path.label("shot1"),
+            ScoreEntry.screenshot_r2_path.label("shot2"),
+            ScoreEntry.screenshot_r3_path.label("shot3"),
+            ScoreEntry.screenshot_path.label("legacy_shot"),  # fallback
+            ScoreEntry.played_at,
+        )
+        .join(Player, Player.id == ScoreEntry.player_id)
+        .where(ScoreEntry.board_id == board.id, ScoreEntry.played_at >= today)
+        .order_by(ScoreEntry.total_score.desc())
+    ).all()
+
+    posts = [{
+        "name": r.name,
+        "r1": int(r.round1), "r2": int(r.round2), "r3": int(r.round3),
+        "total": int(r.total_score),
+        "img1": r.shot1 or r.legacy_shot,
+        "img2": r.shot2,
+        "img3": r.shot3,
+        "time": r.played_at.strftime("%H:%M"),
+    } for r in rows]
+
+    return templates.TemplateResponse(
+        "today_round.html",
+        {"request": request, "me": me, "board": board, "posts": posts, "is_global": False}
+    )
+

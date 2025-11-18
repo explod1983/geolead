@@ -8,28 +8,41 @@
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <header class="topbar">
-      <div class="wrap">
-        <a href="/board/global" class="brand">GeoLeader</a>
-
-        <nav class="nav">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <!-- left -->
+        <nav class="nav-left">
+          <a href="/" class="brand">GeoLeader</a>
           <a href="/boards" class="nav-link">Boards</a>
-          {% if me %}
-            <a href="/boards/new" class="btn nav-btn">Create board</a>
+        </nav>
+
+        <!-- center: board title -->
+        <div class="nav-center">
+          {% if is_global %}
+            <div class="board-title">Global</div>
+          {% elif board %}
+            <div class="board-title">{{ board.name }}</div>
           {% endif %}
+        </div>
 
-          <span class="spacer"></span>
-
+        <!-- right -->
+        <nav class="nav-right">
+          {% if board and not is_global %}
+            <a class="btn small ghost" href="/board/{{ board.slug }}/today">Today’s round</a>
+            <a class="btn small" href="/board/{{ board.slug }}/submit">Submit</a>
+          {% endif %}
+          <a href="/me" class="nav-link">
+            My stats{% if me %} · {{ me.name }}{% endif %}
+          </a>
           {% if me %}
-            <a href="/me" class="nav-link">My stats</a>
-            <a href="/logout" class="btn ghost nav-btn">Logout</a>
+            <a class="btn small ghost" href="/logout">Logout</a>
           {% else %}
-            <a href="/login" class="btn nav-btn">Login</a>
-            <a href="/register" class="btn ghost nav-btn">Register</a>
+            <a class="btn small" href="/login">Login</a>
           {% endif %}
         </nav>
       </div>
     </header>
+
 
   <main class="container">
     {% block content %}{% endblock %}
