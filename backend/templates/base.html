@@ -8,32 +8,28 @@
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <header class="site-header">
-    <nav class="nav">
-      <a href="/board/global" class="brand">🌍 GeoGuesser Leaderboard</a>
-      <a href="/boards" class="btn ghost small">Boards</a>
-      {% if request.session.get('user_email') %}
-      <a href="/boards" class="btn ghost small">Create board</a>
-      {% endif %}
-      <div class="spacer"></div>
-      {% if request.session.get('user_email') %}
-        <span class="hello">Hi, {{ request.session.get('user_name') }}</span>
-        {% set current = request.session.get('current_board_slug') %}
-        {% if me %}
-          <a href="/me" class="btn">My stats</a>
-        {% endif %}
-        {% if current %}
-          <a href="/board/{{ current }}/submit" class="btn">Submit</a>
-        {% else %}
-          <a href="/boards" class="btn ghost">Choose a board</a>
-        {% endif %}
-        <a href="/logout" class="btn ghost">Logout</a>
-      {% else %}
-        <a href="/register" class="btn">Registration</a>
-        <a href="/login" class="btn ghost">Login</a>
-      {% endif %}
-    </nav>
-  </header>
+  <header class="topbar">
+      <div class="wrap">
+        <a href="/board/global" class="brand">GeoLeader</a>
+
+        <nav class="nav">
+          <a href="/boards" class="nav-link">Boards</a>
+          {% if me %}
+            <a href="/boards/new" class="btn nav-btn">Create board</a>
+          {% endif %}
+
+          <span class="spacer"></span>
+
+          {% if me %}
+            <a href="/me" class="nav-link">My stats</a>
+            <a href="/logout" class="btn ghost nav-btn">Logout</a>
+          {% else %}
+            <a href="/login" class="btn nav-btn">Login</a>
+            <a href="/register" class="btn ghost nav-btn">Register</a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
 
   <main class="container">
     {% block content %}{% endblock %}

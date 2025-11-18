@@ -149,3 +149,32 @@ a:not(.btn):focus { color: #ffffff; text-decoration: underline; }
 }
 .table tr.copy-highlight td { color: #fff; }
 .table tr.copy-dim { opacity: .55; }
+
+/* --- Topbar layout fixes --- */
+.topbar{
+  position: sticky; top: 0; z-index: 60;
+  background: #0b0f14; /* same as page bg */
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.topbar .wrap{
+  max-width: 1200px; margin: 0 auto;
+  padding: 10px 16px;
+  display: flex; align-items: center; gap: 16px;
+}
+.topbar .brand{
+  color: #fff; text-decoration: none; font-weight: 600; font-size: 18px;
+}
+.topbar .nav{
+  display: flex; align-items: center; gap: 12px; width: 100%;
+}
+.topbar .nav .spacer{ flex: 1; }
+.topbar .nav .nav-link{
+  color: #cbd5e1; text-decoration: none; padding: 6px 4px;
+}
+.topbar .nav .nav-link:hover{ color: #fff; }
+
+/* Buttons in the topbar: force consistent height & vertical centering */
+.topbar .nav .nav-btn{
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 32px; line-height: 1; padding: 0 12px;
+}

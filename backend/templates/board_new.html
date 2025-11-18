@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Create board{% endblock %}
+{% block content %}
+<h1>Create board</h1>
+
+<div class="card" style="margin-top:12px; max-width:520px;">
+  <form method="post" action="/boards" class="form">
+    <label for="name">Board name</label>
+    <input id="name" name="name" type="text" required maxlength="120" placeholder="e.g., Team Alpha" />
+    <p class="muted" style="margin:6px 0 12px;">A slug will be generated automatically.</p>
+    <button class="btn" type="submit">Create board</button>
+  </form>
+</div>
+{% endblock %}

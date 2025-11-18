@@ -603,3 +603,11 @@ async def player_stats(player_id: int, request: Request, db: Session = Depends(g
     return templates.TemplateResponse("user_history.html", {
         "request": request, "me": me, "player": player, "entries": entries
     })
+
+@app.get("/boards/new", response_class=HTMLResponse)
+async def new_board_form(request: Request, db: Session = Depends(get_db)):
+    me = current_user(request, db)
+    if not me:
+        # only logged-in users can create boards
+        return RedirectResponse(url="/login?next=%2Fboards%2Fnew", status_code=303)
+    return templates.TemplateResponse("board_new.html", {"request": request, "me": me})
