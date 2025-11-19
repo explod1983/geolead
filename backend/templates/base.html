@@ -51,6 +51,7 @@
   <footer class="footer">Made by Oleksandr for friendly team competitions.</footer>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script>
+  // Toast helper (existing functionality)
   window.showToast = (msg, timeout = 1800) => {
     const t = document.getElementById('toast');
     if (!t) return;
@@ -59,6 +60,56 @@
     clearTimeout(window._toastTimer);
     window._toastTimer = setTimeout(() => t.classList.remove('show'), timeout);
   };
+
+  // Screenshot lightbox for .shot images (Today’s round)
+  (function () {
+    function setupLightbox() {
+      const shots = document.querySelectorAll('.shot');
+      if (!shots.length) return;  // nothing to do on pages without screenshots
+
+      let lb = document.getElementById('image-lightbox');
+      if (!lb) {
+        lb = document.createElement('div');
+        lb.id = 'image-lightbox';
+        lb.className = 'image-lightbox';
+        lb.innerHTML = `
+          <div class="image-lightbox-close" aria-label="Close" role="button">&times;</div>
+          <img alt="Screenshot preview" />
+          <div class="image-lightbox-caption"></div>
+        `;
+        document.body.appendChild(lb);
+      }
+
+      const imgEl = lb.querySelector('img');
+      const closeEl = lb.querySelector('.image-lightbox-close');
+      const captionEl = lb.querySelector('.image-lightbox-caption');
+
+      const close = () => lb.classList.remove('open');
+
+      closeEl.addEventListener('click', close);
+      lb.addEventListener('click', (e) => {
+        // click on dark background closes
+        if (e.target === lb) close();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close();
+      });
+
+      shots.forEach((shot) => {
+        shot.addEventListener('click', () => {
+          imgEl.src = shot.src;
+          captionEl.textContent = shot.alt || '';
+          lb.classList.add('open');
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupLightbox);
+    } else {
+      setupLightbox();
+    }
+  })();
 </script>
 
 </body>

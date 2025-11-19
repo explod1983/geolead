@@ -281,3 +281,51 @@ main.container:has(.posts) .shot,
 main.container:has(.posts) .shot-empty{
   border-radius: 0;
 }
+
+/* ---------- Screenshot lightbox ---------- */
+
+.image-lightbox{
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.image-lightbox.open{
+  display: flex;
+}
+
+.image-lightbox img{
+  max-width: min(96vw, 1200px);
+  max-height: 96vh;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+}
+
+.image-lightbox-close{
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  font-size: 28px;
+  cursor: pointer;
+  color: #f5f5f5;
+  line-height: 1;
+}
+
+.image-lightbox-caption{
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ccc;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Show pointer on clickable screenshots */
+.shot{
+  cursor: zoom-in;
+}
