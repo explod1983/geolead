@@ -135,29 +135,88 @@ a:not(.btn):hover, a:not(.btn):focus{ color:#ffffff; text-decoration:underline; 
 .grid-3 { display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 /* ---------- Today's round posts ---------- */
-.posts{ display:flex; flex-direction:column; gap:16px; }
-.post.card{ padding:16px; overflow:visible; max-height:none; }  /* no inner scrollbars */
 
+/* Stack posts vertically with a bit more space */
+.posts{
+  display:flex;
+  flex-direction:column;
+  gap:24px;
+}
+
+/* Make the “Today’s round” posts borderless so screenshots can use all the space */
+.post.card{
+  padding:0;
+  overflow:visible;
+  max-height:none;
+  background:none;
+  border:none;
+}
+
+/* Header stays the same */
 .post-header{
-  display:flex; align-items:baseline; justify-content:space-between;
-  margin-bottom:12px; gap:12px;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:12px;
+  gap:12px;
 }
-.post-title .player{ font-weight:600; font-size:18px; margin-right:10px; }
-.post-title .meta{ color:#a9b1c3; font-size:14px; }
-.post-header .time{ color:#8c94a6; font-size:12px; }
-
-/* Three blocks for rounds */
-.rounds{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; align-items:stretch; }
-.round{ background:#141821; border:1px solid #222833; border-radius:10px; padding:8px;
-  display:flex; flex-direction:column; }
-.round-head{ color:#a9b1c3; font-size:12px; margin-bottom:6px; }
-
-.shot, .shot-empty{
-  width:100%; height:auto; aspect-ratio:16 / 9; border-radius:8px; overflow:hidden;
+.post-title .player{
+  font-weight:600;
+  font-size:18px;
+  margin-right:10px;
 }
+.post-title .meta{
+  color:#a9b1c3;
+  font-size:14px;
+}
+.post-header .time{
+  color:#8c94a6;
+  font-size:12px;
+}
+
+/* One block per row – screenshot is as wide as the content */
+.rounds{
+  display:grid;
+  grid-template-columns:1fr;         /* was: repeat(3, 1fr) */
+  gap:16px;
+  align-items:stretch;
+}
+
+/* Remove inner “card” look around each round */
+.round{
+  background:transparent;
+  border:none;
+  border-radius:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+}
+
+.round-head{
+  color:#a9b1c3;
+  font-size:12px;
+  margin-bottom:6px;
+}
+
+/* Let the screenshot fill the row with no rounded corners */
+.shot,
 .shot-empty{
-  display:flex; align-items:center; justify-content:center;
-  border:1px dashed #2a3140; background:#0e1218; color:#8c94a6; font-size:13px;
+  width:100%;
+  height:auto;
+  aspect-ratio:16 / 9;
+  border-radius:0;                   /* no rounded border on the image */
+  overflow:hidden;
+}
+
+/* Keep the “no screenshot” placeholder styling */
+.shot-empty{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px dashed #2a3140;
+  background:#0e1218;
+  color:#8c94a6;
+  font-size:13px;
 }
 
 /* Boards page header: right-align the button and make it not bold */
@@ -191,3 +250,34 @@ a:not(.btn):hover, a:not(.btn):focus{ color:#ffffff; text-decoration:underline; 
 .page-title h1{ margin:0; font-size:32px; font-weight:700; }
 .page-title .btn{ font-weight:500; }  /* no !important needed now */
 
+/* ---------- Today’s round: fullscreen, borderless posts ---------- */
+.rounds{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; align-items:stretch; }
+
+
+/* Make the main content full width only on the page that has .posts (Today’s round) */
+main.container:has(.posts){
+  max-width: none;       /* no 1120px limit */
+  margin: 24px 0;        /* keep top/bottom margin, no left/right gaps */
+  padding: 0;            /* remove side padding */
+}
+
+/* Remove card frame only for Today’s round posts */
+main.container:has(.posts) .post.card{
+  background: none;
+  border: none;
+  padding: 16px 0;       /* keep vertical spacing between players */
+}
+
+/* Remove inner “card” look around each round */
+main.container:has(.posts) .round{
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* Screenshots should go edge-to-edge inside their column */
+main.container:has(.posts) .shot,
+main.container:has(.posts) .shot-empty{
+  border-radius: 0;
+}
