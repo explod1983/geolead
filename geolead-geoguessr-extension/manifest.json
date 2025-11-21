@@ -2,11 +2,13 @@
   "manifest_version": 3,
   "name": "GeoLead ⇄ GeoGuessr Bridge",
   "version": "0.1.0",
-  "description": "Automatically captures GeoGuesser free game results and makes them available to GeoLead.",
+  "description": "Automatically captures GeoGuessr game results and sends them to GeoLead.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://www.geoguessr.com/*",
-    "https://www.geolead.fun/*"
+    "https://www.geolead.fun/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   "content_scripts": [
     {
@@ -15,7 +17,11 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://www.geolead.fun/*"],
+      "matches": [
+        "https://www.geolead.fun/*",
+        "http://localhost/*",
+        "http://127.0.0.1/*"
+      ],
       "js": ["geolead_content.js"],
       "run_at": "document_idle"
     }

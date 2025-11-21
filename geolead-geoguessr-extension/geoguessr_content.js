@@ -70,7 +70,6 @@
 
   // ---------- Build summaries ----------
 
-  // Classic (normal) game – in case you play other modes later
   function buildClassicSummary(game, user) {
     const map = game.map || game.challenge?.map || {};
     const mapImage =
@@ -107,10 +106,10 @@
 
       return {
         round: i + 1,
-        distance_m: distance,
+        distance_m: typeof distance === "number" ? distance : null,
         distance_km:
           typeof distance === "number" ? distance / 1000 : null,
-        score,
+        score: typeof score === "number" ? score : null,
         correct: { lat: rnd.lat, lng: rnd.lng },
         guess: guess
           ? { lat: guess.lat, lng: guess.lng }
@@ -134,7 +133,6 @@
     };
   }
 
-  // Daily free game / quiz mode (/free/start)
   function buildDailyQuizSummary(quizGame, user, dailyQuizId) {
     const guesses = quizGame.guesses || [];
     const rounds = quizGame.rounds || [];
@@ -162,10 +160,10 @@
 
       return {
         round: roundNumber,
-        distance_m: distance,
+        distance_m: typeof distance === "number" ? distance : null,
         distance_km:
           typeof distance === "number" ? distance / 1000 : null,
-        score,
+        score: typeof score === "number" ? score : null,
         correct: { lat: correctLat, lng: correctLng },
         guess: guess
           ? { lat: guess.lat, lng: guess.lng }
@@ -205,7 +203,7 @@
 
   function storeSummary() {
     const summary = buildSummaryFromNextData();
-    if (!summary) {
+    if (!summary || !Array.isArray(summary.rounds) || !summary.rounds.length) {
       return;
     }
 
@@ -237,7 +235,6 @@
       const data = getNextData();
       if (!data) return;
 
-      // Create a small "signature" to avoid repeated writes
       const props = data.props || {};
       const pageProps = props.pageProps || {};
       const quizGame = pageProps.quizGame || {};
