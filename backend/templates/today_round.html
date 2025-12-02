@@ -56,9 +56,22 @@
                 </div>
 
                 {% if r.has_map %}
+                  <!-- Imported GeoGuessr game: show map -->
                   <div class="round-map" id="map-{{ player_idx }}-{{ r.index }}"></div>
+
+                {% elif r.has_screenshot and r.screenshot_url %}
+                  <!-- Manual entry: show screenshot -->
+                  <img
+                    class="shot"
+                    src="{{ r.screenshot_url }}"
+                    alt="Round {{ r.index }} screenshot for {{ p.name }}"
+                    data-fullsrc="{{ r.screenshot_url }}"
+                    data-caption="{{ p.name }} – Round {{ r.index }}{% if r.score %} · {{ r.score }} pts{% endif %}{% if r.distance_m %} · {{ (r.distance_m / 1000.0)|round(1) }} km{% endif %}"
+                  />
+
                 {% else %}
-                  <div class="shot shot-empty">No map data</div>
+                  <!-- No map and no screenshot -->
+                  <div class="shot shot-empty">No map or screenshot</div>
                 {% endif %}
               </div>
             {% endfor %}
@@ -68,13 +81,22 @@
     </div>
   {% endif %}
 
-  <!-- Leaflet JS + simple renderer -->
+  <!-- Screenshot lightbox markup -->
+  <div class="image-lightbox" id="image-lightbox">
+    <span class="image-lightbox-close" id="image-lightbox-close">&times;</span>
+    <img id="image-lightbox-img" src="" alt="Screenshot" />
+    <div class="image-lightbox-caption" id="image-lightbox-caption"></div>
+  </div>
+
+  <!-- Leaflet JS + map renderer -->
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-o8UgE19ES3QnE/kV1l1obTNT5hzuC1Lpp3CqkMk8W+8="
     crossorigin=""
   ></script>
+
   <script>
+    // Maps for imported GeoGuessr games
     document.addEventListener('DOMContentLoaded', () => {
       if (typeof L === 'undefined') {
         console.warn('Leaflet not loaded');
@@ -99,7 +121,6 @@
           return;
         }
 
-        // Create map
         const map = L.map(el, {
           attributionControl: false,
           zoomControl: false,
@@ -113,28 +134,64 @@
           maxZoom: 18,
         }).addTo(map);
 
-        // Markers
-        const guessMarker = L.circleMarker(guess, {
+        L.circleMarker(guess, {
           radius: 6,
           color: '#4ade80',
           fillColor: '#4ade80',
           fillOpacity: 0.9,
         }).addTo(map);
 
-        const targetMarker = L.circleMarker(target, {
+        L.circleMarker(target, {
           radius: 6,
           color: '#f87171',
           fillColor: '#f87171',
           fillOpacity: 0.9,
         }).addTo(map);
 
-        // Line between them
-        const line = L.polyline([guess, target], {
+        L.polyline([guess, target], {
           weight: 2,
           color: '#e5e7eb',
         }).addTo(map);
 
         map.fitBounds(bounds.pad(0.4));
+      });
+    });
+
+    // Lightbox for screenshots
+    document.addEventListener('DOMContentLoaded', () => {
+      const lightbox = document.getElementById('image-lightbox');
+      const imgEl = document.getElementById('image-lightbox-img');
+      const captionEl = document.getElementById('image-lightbox-caption');
+      const closeEl = document.getElementById('image-lightbox-close');
+
+      if (!lightbox || !imgEl || !captionEl || !closeEl) return;
+
+      function closeLightbox() {
+        lightbox.classList.remove('open');
+        imgEl.src = '';
+        captionEl.textContent = '';
+      }
+
+      closeEl.addEventListener('click', closeLightbox);
+      lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) {
+          closeLightbox();
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeLightbox();
+        }
+      });
+
+      document.querySelectorAll('.shot[data-fullsrc]').forEach((img) => {
+        img.addEventListener('click', () => {
+          const src = img.dataset.fullsrc || img.src;
+          const caption = img.dataset.caption || '';
+          imgEl.src = src;
+          captionEl.textContent = caption;
+          lightbox.classList.add('open');
+        });
       });
     });
   </script>

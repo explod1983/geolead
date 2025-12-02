@@ -2,10 +2,10 @@
 {% block title %}Submit · {{ board.name }}{% endblock %}
 
 {% block content %}
-  <h1>Submit – {{ board.name }}</h1>
+  <h1>Submit to {{ board.name }}</h1>
 
   {% if limit_reached %}
-    <div class="card" style="max-width:600px;">
+    <div class="card" style="max-width:960px;">
       <p>You’ve already submitted today for this board. Try another board, or come back tomorrow. ✋</p>
       <p style="margin-top:10px;">
         <a class="btn" href="/board/{{ board.slug }}">Back to board</a>
@@ -14,7 +14,7 @@
   {% else %}
 
     <!-- 1) Extension import (recommended) -->
-    <div class="card" style="max-width:880px; margin-bottom:18px;">
+    <div class="card" style="max-width:960px; margin-bottom:18px;">
       <h2 style="margin-top:0;">Import today’s game (recommended)</h2>
       <p>
         Scores can be imported automatically from GeoGuessr using the
@@ -61,16 +61,28 @@
       </p>
     </div>
 
-    <!-- 2) Manual submission – scores + per-round screenshot boxes (styled) -->
-    <div class="card" style="max-width:880px;">
+    <!-- 2) Manual submission – 3-column layout like the old design -->
+    <div class="card" style="max-width:960px;">
       <h2 style="margin-top:0;">Submit manually</h2>
       <p>
         If the extension doesn’t work, you can submit exactly as before:
         enter your scores for each round and paste screenshots.
       </p>
 
-      <!-- local style for score inputs (matches .form input in your CSS) -->
+      <!-- score input styling to match dark theme -->
       <style>
+        .score-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
+          margin-top: 16px;
+        }
+        .score-col label {
+          display: block;
+          margin-bottom: 6px;
+          font-weight: 600;
+          color: var(--text);
+        }
         .score-input {
           background: #0f1116;
           color: var(--text);
@@ -91,81 +103,59 @@
         action="/board/{{ board.slug }}/submit"
         autocomplete="off"
       >
-        <!-- Scores table -->
-        <div style="overflow-x:auto; margin-top:12px;">
-          <table class="table">
-            <thead>
-              <tr>
-                <th style="width:80px;">Round</th>
-                <th style="width:120px;">Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Round 1</td>
-                <td>
-                  <input
-                    id="geolead-score-r1"
-                    type="number"
-                    name="round1"
-                    min="0"
-                    max="5000"
-                    required
-                    inputmode="numeric"
-                    class="score-input"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td>Round 2</td>
-                <td>
-                  <input
-                    id="geolead-score-r2"
-                    type="number"
-                    name="round2"
-                    min="0"
-                    max="5000"
-                    required
-                    inputmode="numeric"
-                    class="score-input"
-                  />
-                </td>
-              </tr>
-              <tr>
-                <td>Round 3</td>
-                <td>
-                  <input
-                    id="geolead-score-r3"
-                    type="number"
-                    name="round3"
-                    min="0"
-                    max="5000"
-                    required
-                    inputmode="numeric"
-                    class="score-input"
-                  />
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <th>Total</th>
-                <th>
-                  <span id="geolead-total-score">0</span>
-                </th>
-              </tr>
-            </tfoot>
-          </table>
+        <!-- scores row: 3 columns -->
+        <div class="score-grid">
+          <div class="score-col">
+            <label for="geolead-score-r1">Round 1</label>
+            <input
+              id="geolead-score-r1"
+              type="number"
+              name="round1"
+              min="0"
+              max="5000"
+              required
+              inputmode="numeric"
+              class="score-input"
+            />
+          </div>
+          <div class="score-col">
+            <label for="geolead-score-r2">Round 2</label>
+            <input
+              id="geolead-score-r2"
+              type="number"
+              name="round2"
+              min="0"
+              max="5000"
+              required
+              inputmode="numeric"
+              class="score-input"
+            />
+          </div>
+          <div class="score-col">
+            <label for="geolead-score-r3">Round 3</label>
+            <input
+              id="geolead-score-r3"
+              type="number"
+              name="round3"
+              min="0"
+              max="5000"
+              required
+              inputmode="numeric"
+              class="score-input"
+            />
+          </div>
         </div>
 
-        <!-- Hidden fields that backend expects -->
+        <!-- hidden total span (not shown, just for JS if you want) -->
+        <span id="geolead-total-score" style="display:none;">0</span>
+
+        <!-- hidden fields that backend expects -->
         <input type="hidden" name="screenshot_r1" id="geolead-shot-r1" />
         <input type="hidden" name="screenshot_r2" id="geolead-shot-r2" />
         <input type="hidden" name="screenshot_r3" id="geolead-shot-r3" />
 
-        <!-- Screenshot paste boxes using your CSS -->
-        <div class="paste-grid grid-3">
-          <!-- Round 1 -->
+        <!-- screenshot row: 3 big boxes -->
+        <div class="paste-grid grid-3" style="margin-top:24px;">
           <div class="paste-wrap">
             <div
               id="geolead-paste-box-r1"
@@ -173,8 +163,10 @@
               tabindex="0"
             >
               <div class="hint">
-                <strong>Round 1</strong><br />
-                Click here and press <kbd>Ctrl+V</kbd> / <kbd>⌘+V</kbd> to paste screenshot…
+                <div style="font-weight:600; margin-bottom:4px;">
+                  Screenshot — Round 1
+                </div>
+                Click and press <strong>Ctrl/⌘+V</strong>
               </div>
               <img
                 id="geolead-shot-img-r1"
@@ -184,7 +176,6 @@
             </div>
           </div>
 
-          <!-- Round 2 -->
           <div class="paste-wrap">
             <div
               id="geolead-paste-box-r2"
@@ -192,8 +183,10 @@
               tabindex="0"
             >
               <div class="hint">
-                <strong>Round 2</strong><br />
-                Click here and press <kbd>Ctrl+V</kbd> / <kbd>⌘+V</kbd> to paste screenshot…
+                <div style="font-weight:600; margin-bottom:4px;">
+                  Screenshot — Round 2
+                </div>
+                Click and press <strong>Ctrl/⌘+V</strong>
               </div>
               <img
                 id="geolead-shot-img-r2"
@@ -203,7 +196,6 @@
             </div>
           </div>
 
-          <!-- Round 3 -->
           <div class="paste-wrap">
             <div
               id="geolead-paste-box-r3"
@@ -211,8 +203,10 @@
               tabindex="0"
             >
               <div class="hint">
-                <strong>Round 3</strong><br />
-                Click here and press <kbd>Ctrl+V</kbd> / <kbd>⌘+V</kbd> to paste screenshot…
+                <div style="font-weight:600; margin-bottom:4px;">
+                  Screenshot — Round 3
+                </div>
+                Click and press <strong>Ctrl/⌘+V</strong>
               </div>
               <img
                 id="geolead-shot-img-r3"
@@ -223,13 +217,9 @@
           </div>
         </div>
 
-        <p class="muted" style="margin-top:6px;">
-          Screenshots are optional. You can submit scores without images if you like.
-        </p>
-
-        <div style="margin-top:16px;">
+        <div style="margin-top:20px;">
           <button type="submit" class="btn">
-            Submit scores manually
+            Submit
           </button>
           <a href="/board/{{ board.slug }}" class="btn ghost small" style="margin-left:8px;">
             Cancel
@@ -237,6 +227,11 @@
         </div>
       </form>
     </div>
+
+    <p class="muted" style="margin-top:12px; max-width:960px;">
+      After submitting, you can view everyone’s results and screenshots on
+      <a href="/board/{{ board.slug }}/today">Today’s round</a>.
+    </p>
 
     <!-- 3) Extension install link auto-detection -->
     <script>
@@ -359,38 +354,27 @@
       })();
     </script>
 
-    <!-- 5) Manual form behaviour: total calculation + paste boxes wired to /api/paste_image -->
+    <!-- 5) Manual behaviour: clamp scores + paste boxes wired to /api/paste_image -->
     <script>
       (function () {
         const r1 = document.getElementById("geolead-score-r1");
         const r2 = document.getElementById("geolead-score-r2");
         const r3 = document.getElementById("geolead-score-r3");
-        const totalEl = document.getElementById("geolead-total-score");
 
-        function parseScore(input) {
-          if (!input) return 0;
+        function clampScore(input) {
+          if (!input) return;
           const v = parseInt(input.value, 10);
-          if (isNaN(v)) return 0;
-          return Math.min(5000, Math.max(0, v));
-        }
-
-        function updateTotal() {
-          const t = parseScore(r1) + parseScore(r2) + parseScore(r3);
-          if (totalEl) totalEl.textContent = t.toString();
+          if (isNaN(v)) return;
+          const nv = Math.min(5000, Math.max(0, v));
+          if (nv !== v) input.value = nv;
         }
 
         [r1, r2, r3].forEach((el) => {
           if (!el) return;
-          el.addEventListener("input", updateTotal);
-          el.addEventListener("blur", () => {
-            const v = parseScore(el);
-            if (el.value !== "" + v) el.value = v;
-            updateTotal();
-          });
+          el.addEventListener("blur", () => clampScore(el));
         });
-        updateTotal();
 
-        // Screenshot paste boxes
+        // Screenshot paste boxes (one active at a time)
         let activeRound = null;
 
         function attachPasteBox(round) {
@@ -409,7 +393,6 @@
 
         ["r1", "r2", "r3"].forEach(attachPasteBox);
 
-        // Clear activeRound when clicking outside paste boxes
         document.addEventListener("click", (e) => {
           if (!e.target.closest(".paste-box")) {
             activeRound = null;
@@ -432,7 +415,6 @@
           }
 
           if (!file) return;
-
           event.preventDefault();
 
           const box = document.getElementById("geolead-paste-box-" + activeRound);
@@ -442,12 +424,12 @@
           if (!box || !hiddenInput || !img) return;
 
           const hint = box.querySelector(".hint");
-          const oldHint = hint ? hint.textContent : "";
+          const oldHintHtml = hint ? hint.innerHTML : "";
 
           const fd = new FormData();
           fd.append("image", file);
 
-          if (hint) hint.textContent = "Uploading screenshot…";
+          if (hint) hint.innerHTML = "Uploading screenshot…";
 
           try {
             const resp = await fetch("/api/paste_image", {
@@ -472,7 +454,7 @@
               "Screenshot upload failed due to a network error. You can still submit without an image."
             );
           } finally {
-            if (hint) hint.textContent = oldHint;
+            if (hint) hint.innerHTML = oldHintHtml;
           }
         });
       })();

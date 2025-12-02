@@ -1256,7 +1256,7 @@ async def todays_round(slug: str, request: Request, db: Session = Depends(get_db
             "today_locked.html", {"request": request, "me": me, "board": board}
         )
 
-    # 1) Base rows (scores + screenshots)
+    # 1) Base rows (scores + screenshot paths)
     rows = db.execute(
         select(
             ScoreEntry.id.label("entry_id"),
@@ -1268,7 +1268,7 @@ async def todays_round(slug: str, request: Request, db: Session = Depends(get_db
             ScoreEntry.screenshot_r1_path.label("shot1"),
             ScoreEntry.screenshot_r2_path.label("shot2"),
             ScoreEntry.screenshot_r3_path.label("shot3"),
-            ScoreEntry.screenshot_path.label("legacy_shot"),  # fallback
+            ScoreEntry.screenshot_path.label("legacy_shot"),  # fallback for round 1
             ScoreEntry.played_at,
         )
         .join(Player, Player.id == ScoreEntry.player_id)
@@ -1278,7 +1278,7 @@ async def todays_round(slug: str, request: Request, db: Session = Depends(get_db
 
     entry_ids = [r.entry_id for r in rows]
 
-    # 2) Geo data per entry
+    # 2) Geo data per entry (for imported games)
     geo_by_entry: dict[int, dict] = {}
     if entry_ids:
         geo_rows = db.execute(
@@ -1300,10 +1300,7 @@ async def todays_round(slug: str, request: Request, db: Session = Depends(get_db
         for gr in geo_rows:
             bucket = geo_by_entry.setdefault(
                 gr.score_entry_id,
-                {
-                    "total_distance_m": float(gr.total_distance_m or 0.0),
-                    "rounds": {},
-                },
+                {"total_distance_m": float(gr.total_distance_m or 0.0), "rounds": {}},
             )
             if gr.round_index is not None:
                 bucket["rounds"][gr.round_index] = {
@@ -1317,16 +1314,27 @@ async def todays_round(slug: str, request: Request, db: Session = Depends(get_db
                     "target_lng": gr.target_lng,
                 }
 
-    # 3) Build posts list for template (scores + optional geo info + screenshots)
+    # 3) Build posts list for template (maps + screenshots)
     posts: list[dict] = []
-
     for r in rows:
         geo = geo_by_entry.get(r.entry_id, {})
         rounds_geo = geo.get("rounds", {})
         total_distance_m = geo.get("total_distance_m")
 
+        # screenshot paths for each round
+        shot_for_round = {
+            1: r.shot1 or r.legacy_shot,
+            2: r.shot2,
+            3: r.shot3,
+        }
+
         def build_round(idx: int, score_value: int) -> dict:
             rg = rounds_geo.get(idx) or {}
+            screenshot_url = shot_for_round.get(idx)
+            has_map = (
+                rg.get("guess_lat") is not None
+                and rg.get("target_lat") is not None
+            )
             return {
                 "index": idx,
                 "score": score_value,
@@ -1335,8 +1343,9 @@ async def todays_round(slug: str, request: Request, db: Session = Depends(get_db
                 "guess_lng": rg.get("guess_lng"),
                 "target_lat": rg.get("target_lat"),
                 "target_lng": rg.get("target_lng"),
-                "has_map": rg.get("guess_lat") is not None
-                and rg.get("target_lat") is not None,
+                "has_map": has_map,
+                "screenshot_url": screenshot_url,
+                "has_screenshot": bool(screenshot_url),
             }
 
         posts.append(
@@ -1346,14 +1355,11 @@ async def todays_round(slug: str, request: Request, db: Session = Depends(get_db
                 "r2": int(r.round2 or 0),
                 "r3": int(r.round3 or 0),
                 "total": int(r.total_score or 0),
-                "img1": r.shot1 or r.legacy_shot,
-                "img2": r.shot2,
-                "img3": r.shot3,
-                "time": r.played_at.strftime("%H:%M"),
                 "total_distance_m": total_distance_m,
                 "total_distance_km": (total_distance_m / 1000.0)
                 if total_distance_m
                 else None,
+                "time": r.played_at.strftime("%H:%M"),
                 "rounds": [
                     build_round(1, int(r.round1 or 0)),
                     build_round(2, int(r.round2 or 0)),
@@ -1366,7 +1372,6 @@ async def todays_round(slug: str, request: Request, db: Session = Depends(get_db
         "today_round.html",
         {"request": request, "me": me, "board": board, "posts": posts, "is_global": False},
     )
-
 
 @app.get("/privacy/extension", response_class=HTMLResponse)
 async def extension_privacy(request: Request):
