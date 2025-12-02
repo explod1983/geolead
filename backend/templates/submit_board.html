@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Submit · {{ board.name }}{% endblock %}
+
 {% block content %}
   <h1>Submit – {{ board.name }}</h1>
 
@@ -11,11 +12,13 @@
       </p>
     </div>
   {% else %}
-    <div class="card" style="max-width:880px;">
-      <h2>Submit today’s game</h2>
+
+    <!-- 1) Recommended: import via browser extension -->
+    <div class="card" style="max-width:880px; margin-bottom:18px;">
+      <h2 style="margin-top:0;">Import today’s game (recommended)</h2>
       <p>
-        Scores are now imported automatically from GeoGuessr using the
-        <strong>GeoLead ⇄ GeoGuessr</strong> browser extension.
+        If you have the <strong>GeoLead ⇄ GeoGuessr</strong> browser extension installed,
+        you can import today’s daily game automatically from GeoGuessr.
       </p>
 
       <ol class="list" style="margin-top:8px; padding-left:20px;">
@@ -25,7 +28,6 @@
             geoguessr.com
           </a>.
           On the final results screen, <strong>click the green “Finish game” button</strong>.
-          GeoLead can only import games after you press “Finish game”.
         </li>
         <li>
           Come back to this page:
@@ -36,27 +38,17 @@
           <button id="geolead-import-btn" type="button" class="btn small">
             Import today’s game results
           </button>
-          (the extension will send today’s scores and distances for each round).
+          and the extension will send your scores and distances.
         </li>
       </ol>
 
-      <p class="muted" style="margin-top:12px;">
-        After import you will be redirected to the <strong>Today’s round</strong> view
-        for this board where you can see the map and distances for each round.
+      <p class="muted" style="margin-top:10px;">
+        After a successful import you’ll be redirected to the
+        <strong>Today’s round</strong> view for this board.
       </p>
 
       <p class="muted" style="margin-top:8px;">
-        If you don’t see the button, make sure the extension is installed and enabled,
-        and that you are logged in on both GeoGuessr and GeoLead.
-      </p>
-
-      <p class="muted" style="margin-top:8px;">
-        <strong>Important:</strong> If you did not press “Finish game” in GeoGuessr,
-        GeoLead will not find today’s game and the import will fail.
-      </p>
-
-      <p class="muted" style="margin-top:16px;">
-        Don’t have the browser extension yet?
+        Don’t have the extension yet?
         <a
           id="geolead-ext-install-link"
           class="btn small"
@@ -67,42 +59,176 @@
           Install the browser extension
         </a>
       </p>
-
-      <script>
-        (function () {
-          const link = document.getElementById("geolead-ext-install-link");
-          if (!link) return;
-
-          const ua = navigator.userAgent || "";
-          let url = "/extensions"; // fallback, e.g. a help page on GeoLead
-
-          // Store URLs
-          const chromeUrl  = "https://chromewebstore.google.com/detail/geolead-%E2%87%84-geoguessr-bridg/ibplmeklhbagilmglbaoipeifnpmnbhe";
-          const edgeUrl    = "https://microsoftedge.microsoft.com/addons/detail/geolead-%E2%87%84-geoguessr-bridg/gidgabkenpfkmpiaohlfjgjjjneginnl";
-          const firefoxUrl = "https://addons.mozilla.org/en-US/firefox/addon/geolead-geoguessr-bridge/";
-          const safariUrl  = "https://apps.apple.com/app/idREPLACE_WITH_REAL_ID";
-
-          if (/Firefox\/\d+/i.test(ua)) {
-            url = firefoxUrl;
-          } else if (/Edg\/\d+/i.test(ua)) {
-            url = edgeUrl;
-          } else if (/Safari/i.test(ua) && !/Chrome|Chromium|Edg/i.test(ua)) {
-            url = safariUrl;
-          } else {
-            // default: Chrome / other Chromium browsers
-            url = chromeUrl;
-          }
-
-          link.href = url;
-        })();
-      </script>
-
     </div>
 
+    <!-- 2) Manual submission – keeps the old “enter scores + paste screenshot” flow -->
+    <div class="card" style="max-width:880px;">
+      <h2 style="margin-top:0;">Submit manually (fallback)</h2>
+      <p>
+        If the extension doesn’t work for you, use the same manual flow as before:
+        enter your scores and paste a screenshot from the GeoGuessr results screen.
+      </p>
+
+      <form
+        id="geolead-manual-form"
+        method="post"
+        action="/board/{{ board.slug }}/submit"
+        autocomplete="off"
+      >
+        <div style="overflow-x:auto; margin-top:12px;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width:80px;">Round</th>
+                <th style="width:120px;">Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Round 1</td>
+                <td>
+                  <input
+                    type="number"
+                    name="round1"
+                    min="0"
+                    max="5000"
+                    required
+                    inputmode="numeric"
+                    class="input"
+                    style="width:100%;"
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>Round 2</td>
+                <td>
+                  <input
+                    type="number"
+                    name="round2"
+                    min="0"
+                    max="5000"
+                    required
+                    inputmode="numeric"
+                    class="input"
+                    style="width:100%;"
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>Round 3</td>
+                <td>
+                  <input
+                    type="number"
+                    name="round3"
+                    min="0"
+                    max="5000"
+                    required
+                    inputmode="numeric"
+                    class="input"
+                    style="width:100%;"
+                  />
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th>Total</th>
+                <th>
+                  <span id="geolead-total-score">0</span>
+                </th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- Hidden screenshot fields used by the backend -->
+        <input type="hidden" name="screenshot_r1" id="geolead-shot-r1" />
+        <input type="hidden" name="screenshot_r2" id="geolead-shot-r2" />
+        <input type="hidden" name="screenshot_r3" id="geolead-shot-r3" />
+
+        <div style="margin-top:16px;">
+          <label for="geolead-paste-area" class="muted">
+            Screenshot (optional, same behaviour as before):
+          </label>
+          <div
+            id="geolead-paste-wrapper"
+            style="
+              border: 1px dashed #ccc;
+              border-radius: 4px;
+              padding: 10px;
+              margin-top: 4px;
+            "
+          >
+            <textarea
+              id="geolead-paste-area"
+              rows="3"
+              style="width:100%; resize:vertical;"
+              placeholder="Click here and press Ctrl+V / ⌘+V to paste a screenshot from GeoGuessr…"
+            ></textarea>
+            <div
+              id="geolead-shot-preview"
+              style="margin-top:8px; display:none; text-align:center;"
+            >
+              <img
+                id="geolead-shot-img"
+                alt="Screenshot preview"
+                style="max-width:100%; border-radius:4px;"
+              />
+            </div>
+            <p class="muted" style="margin-top:6px;">
+              The image is stored securely on GeoLead and linked to today’s entry.
+              You can still submit without a screenshot.
+            </p>
+          </div>
+        </div>
+
+        <div style="margin-top:18px;">
+          <button type="submit" class="btn">
+            Submit scores manually
+          </button>
+          <a href="/board/{{ board.slug }}" class="btn secondary small" style="margin-left:8px;">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- 3) Extension install link auto-detection -->
+    <script>
+      (function () {
+        const link = document.getElementById("geolead-ext-install-link");
+        if (!link) return;
+
+        const ua = navigator.userAgent || "";
+        let url = "/extensions"; // fallback
+
+        const chromeUrl =
+          "https://chromewebstore.google.com/detail/geolead-%E2%87%84-geoguessr-bridg/ibplmeklhbagilmglbaoipeifnpmnbhe";
+        const edgeUrl =
+          "https://microsoftedge.microsoft.com/addons/detail/geolead-%E2%87%84-geoguessr-bridg/gidgabkenpfkmpiaohlfjgjjjneginnl";
+        const firefoxUrl =
+          "https://addons.mozilla.org/en-US/firefox/addon/geolead-geoguessr-bridge/";
+        const safariUrl = "https://apps.apple.com/app/idREPLACE_WITH_REAL_ID";
+
+        if (/Firefox\/\d+/i.test(ua)) {
+          url = firefoxUrl;
+        } else if (/Edg\/\d+/i.test(ua)) {
+          url = edgeUrl;
+        } else if (/Safari/i.test(ua) && !/Chrome|Chromium|Edg/i.test(ua)) {
+          url = safariUrl;
+        } else {
+          url = chromeUrl;
+        }
+
+        link.href = url;
+      })();
+    </script>
+
+    <!-- 4) Listener for extension → GeoLead import -->
     <script>
       (function () {
         const boardSlug = "{{ board.slug }}";
-        const geoleadPlayerName = "{{ me.name|e }}";
+        const geoleadPlayerName = "{{ me.name|e if me else '' }}";
 
         window.addEventListener("geolead:geoguessr-import", async (event) => {
           const game = event.detail || {};
@@ -110,37 +236,42 @@
           if (!game || !Array.isArray(game.rounds) || game.rounds.length === 0) {
             alert(
               "GeoLead Bridge:\n" +
-              "Could not find any rounds in your last GeoGuessr game.\n" +
-              "Finish today’s daily game first (and press “Finish game” at the end), then try again."
+                "Could not find any rounds in your last GeoGuessr game.\n" +
+                "Finish today’s daily game first (and press “Finish game” at the end), then try again."
             );
             return;
           }
 
           const payload = {
-            // This will be IGNORED by the backend for the player mapping (see below),
-            // but we keep it for debugging / logging.
-            player_name: geoleadPlayerName,
+            player_name: geoleadPlayerName || game.player_name || "Unknown",
             board_slug: boardSlug,
             total_score: game.total_score ?? null,
             total_distance_m: game.total_distance_m ?? null,
             game_id: game.dailyQuizId || game.token || null,
-            // timestamp when the extension captured the game
             played_at: game.played_at || null,
             rounds: game.rounds.slice(0, 3).map((r) => ({
               score: r.score ?? 0,
               distance_m: r.distance_m ?? null,
-              guess_lat: r.guess && typeof r.guess.lat === "number" ? r.guess.lat : null,
-              guess_lng: r.guess && typeof r.guess.lng === "number" ? r.guess.lng : null,
-              target_lat: r.correct && typeof r.correct.lat === "number" ? r.correct.lat : null,
-              target_lng: r.correct && typeof r.correct.lng === "number" ? r.correct.lng : null
-            }))
+              guess_lat:
+                r.guess && typeof r.guess.lat === "number" ? r.guess.lat : null,
+              guess_lng:
+                r.guess && typeof r.guess.lng === "number" ? r.guess.lng : null,
+              target_lat:
+                r.correct && typeof r.correct.lat === "number"
+                  ? r.correct.lat
+                  : null,
+              target_lng:
+                r.correct && typeof r.correct.lng === "number"
+                  ? r.correct.lng
+                  : null,
+            })),
           };
 
           try {
             const resp = await fetch("/api/geoguessr/import", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
+              body: JSON.stringify(payload),
             });
 
             const data = await resp.json().catch(() => ({}));
@@ -156,15 +287,18 @@
             const totalScore = data.total_score ?? payload.total_score ?? "n/a";
             const totalDistKm = data.total_distance_m
               ? (data.total_distance_m / 1000).toFixed(1) + " km"
-              : (payload.total_distance_m
-                  ? (payload.total_distance_m / 1000).toFixed(1) + " km"
-                  : "n/a");
+              : payload.total_distance_m
+              ? (payload.total_distance_m / 1000).toFixed(1) + " km"
+              : "n/a";
 
             alert(
               "GeoLead Bridge:\n" +
-              "Imported game successfully!\n" +
-              "Total score: " + totalScore + "\n" +
-              "Total distance: " + totalDistKm
+                "Imported game successfully!\n" +
+                "Total score: " +
+                totalScore +
+                "\n" +
+                "Total distance: " +
+                totalDistKm
             );
 
             window.location.href = "/board/" + boardSlug + "/today";
@@ -172,11 +306,117 @@
             console.error("GeoLead Bridge import error:", err);
             alert(
               "GeoLead Bridge:\n" +
-              "Import failed due to a network or server error.\n" +
-              "Please try again."
+                "Import failed due to a network or server error.\n" +
+                "Please try again."
             );
           }
         });
+      })();
+    </script>
+
+    <!-- 5) Manual form behaviour: total calculation + screenshot paste -->
+    <script>
+      (function () {
+        const form = document.getElementById("geolead-manual-form");
+        if (!form) return;
+
+        const r1 = form.querySelector("input[name='round1']");
+        const r2 = form.querySelector("input[name='round2']");
+        const r3 = form.querySelector("input[name='round3']");
+        const totalEl = document.getElementById("geolead-total-score");
+
+        function parseScore(input) {
+          const v = parseInt(input.value, 10);
+          if (isNaN(v)) return 0;
+          return Math.min(5000, Math.max(0, v));
+        }
+
+        function updateTotal() {
+          const t = parseScore(r1) + parseScore(r2) + parseScore(r3);
+          if (totalEl) totalEl.textContent = t.toString();
+        }
+
+        [r1, r2, r3].forEach((el) => {
+          if (!el) return;
+          el.addEventListener("input", updateTotal);
+          el.addEventListener("blur", () => {
+            const v = parseScore(el);
+            if (el.value !== "" + v) el.value = v;
+            updateTotal();
+          });
+        });
+        updateTotal();
+
+        // Screenshot paste handling
+        const pasteArea = document.getElementById("geolead-paste-area");
+        const previewWrap = document.getElementById("geolead-shot-preview");
+        const previewImg = document.getElementById("geolead-shot-img");
+        const shotR1 = document.getElementById("geolead-shot-r1");
+        const shotR2 = document.getElementById("geolead-shot-r2");
+        const shotR3 = document.getElementById("geolead-shot-r3");
+
+        function setScreenshotUrl(url) {
+          if (shotR1) shotR1.value = url;
+          if (shotR2) shotR2.value = url;
+          if (shotR3) shotR3.value = url;
+          if (previewImg && previewWrap) {
+            previewImg.src = url;
+            previewWrap.style.display = "block";
+          }
+        }
+
+        if (pasteArea) {
+          pasteArea.addEventListener("paste", async function (event) {
+            const clipboardData = event.clipboardData || window.clipboardData;
+            if (!clipboardData || !clipboardData.items) return;
+
+            let file = null;
+            for (let i = 0; i < clipboardData.items.length; i++) {
+              const item = clipboardData.items[i];
+              if (item.type && item.type.indexOf("image/") === 0) {
+                file = item.getAsFile();
+                break;
+              }
+            }
+
+            if (!file) {
+              return;
+            }
+
+            event.preventDefault();
+
+            const fd = new FormData();
+            fd.append("image", file);
+
+            pasteArea.disabled = true;
+            const oldPlaceholder = pasteArea.placeholder;
+            pasteArea.placeholder = "Uploading screenshot…";
+
+            try {
+              const resp = await fetch("/api/paste_image", {
+                method: "POST",
+                body: fd,
+              });
+              const data = await resp.json().catch(() => ({}));
+
+              if (!resp.ok || !data || !data.url) {
+                alert(
+                  "Screenshot upload failed. Please try again or submit without a screenshot."
+                );
+              } else {
+                setScreenshotUrl(data.url);
+              }
+            } catch (err) {
+              console.error("Screenshot upload failed:", err);
+              alert(
+                "Screenshot upload failed due to a network error. You can still submit without a screenshot."
+              );
+            } finally {
+              pasteArea.disabled = false;
+              pasteArea.placeholder = oldPlaceholder;
+            }
+          });
+        }
       })();
     </script>
   {% endif %}
