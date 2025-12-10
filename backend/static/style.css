@@ -17,6 +17,7 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font: 15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  position: relative;
   background-image:
     radial-gradient(120% 60% at 50% -10%, rgba(244,210,106,0.12), transparent 40%),
     radial-gradient(90% 45% at 14% 8%, rgba(74,140,210,0.22), transparent 38%),
@@ -26,6 +27,19 @@ html, body {
   background-attachment: fixed;
 }
 html, body, .container { overflow-x: hidden; }
+
+/* Soft winter scene background */
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background:
+    linear-gradient(180deg, rgba(6,12,16,0.55) 0%, rgba(6,12,16,0.75) 38%, rgba(6,12,16,0.92) 100%),
+    url('https://images.unsplash.com/photo-1489587022184-9e80f1d26ab7?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+  opacity:0.35;
+  z-index:-2;
+  filter: saturate(1.1);
+}
 
 /* Floating snow layers (3 depths) */
 .snow-layer{
@@ -73,6 +87,24 @@ html, body, .container { overflow-x: hidden; }
   from { transform: translateY(-10vh); }
   to   { transform: translateY(110vh); }
 }
+
+/* Holiday banner */
+.holiday-banner{
+  margin: 10px auto -8px;
+  max-width: 1120px;
+  padding: 10px 16px;
+  color: #0d1116;
+  background: linear-gradient(120deg, rgba(244,210,106,0.9), rgba(231,79,91,0.9));
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.holiday-banner .emoji{ font-size: 20px; }
 
 .container {
   max-width: 1120px;
