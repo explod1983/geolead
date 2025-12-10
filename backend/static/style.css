@@ -1,10 +1,11 @@
 :root {
   --radius: 14px;
-  --bg: #0e0f12;
-  --card: #16181d;
-  --muted: #9aa0a6;
-  --text: #e8eaed;
-  --accent: #6ea8fe;
+  --bg: #0c1410;
+  --card: #0f1d15;
+  --muted: #c4d2c8;
+  --text: #f5f8f3;
+  --accent: #e74f5b;       /* holly red */
+  --accent-2: #f4d26a;     /* warm gold */
 }
 
 /* ---------- Base ---------- */
@@ -15,6 +16,13 @@ html, body {
   background: var(--bg);
   color: var(--text);
   font: 15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  background-image:
+    radial-gradient(120% 60% at 50% -10%, rgba(244,210,106,0.18), transparent 40%),
+    radial-gradient(90% 45% at 10% 10%, rgba(231,79,91,0.12), transparent 35%),
+    radial-gradient(110% 50% at 90% 8%, rgba(109,179,126,0.14), transparent 40%),
+    linear-gradient(135deg, #0b1712 0%, #0f2017 40%, #0b1712 100%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 6px);
+  background-attachment: fixed;
 }
 html, body, .container { overflow-x: hidden; }
 
@@ -34,8 +42,9 @@ html, body, .container { overflow-x: hidden; }
 /* ---------- Top bar (aligned to content width) ---------- */
 .topbar{
   position: sticky; top: 0; z-index: 60;
-  background: #0b0f14;
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  background: linear-gradient(135deg, rgba(231,79,91,0.14), rgba(14,26,19,0.92));
+  border-bottom: 1px solid rgba(244,210,106,.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
 }
 .topbar-inner{
   max-width: 1120px;            /* same width as .container */
@@ -45,8 +54,8 @@ html, body, .container { overflow-x: hidden; }
 }
 .nav-left, .nav-right{ display:flex; align-items:center; gap:10px; }
 .nav-center{ flex:1; display:flex; justify-content:center; min-width: 0; }
-.brand{ color:#fff; text-decoration:none; font-weight:700; font-size:18px; }
-.nav-link{ color:#cbd5e1; text-decoration:none; padding:6px 4px; }
+.brand{ color:var(--accent-2); text-decoration:none; font-weight:800; font-size:18px; letter-spacing:0.2px; }
+.nav-link{ color:#e2e8e2; text-decoration:none; padding:6px 4px; }
 .nav-link:hover{ color:#fff; }
 .board-title{
   font-weight:800;
@@ -70,7 +79,7 @@ html, body, .container { overflow-x: hidden; }
   cursor:pointer;
 }
 .btn:hover { filter: brightness(1.05); }
-.btn.ghost { background: transparent; color: var(--text); border: 1px solid #2b2e35; }
+.btn.ghost { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid rgba(244,210,106,0.3); }
 .btn.small {
   padding: 0 12px;
   height: 32px;
@@ -117,13 +126,14 @@ html, body, .container { overflow-x: hidden; }
 /* Sidebar */
 .sidebar {
   background: var(--card);
-  border: 1px solid #24262b;
+  border: 1px solid rgba(244,210,106,0.18);
   border-radius: var(--radius);
   padding: 12px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
 }
 .sidebar-title { margin: 4px 0 8px; font-size: 18px; }
 .sidebar .list { list-style: none; padding: 0; margin: 0; }
-.sidebar .list li { border-bottom: 1px solid #22252b; }
+.sidebar .list li { border-bottom: 1px solid rgba(255,255,255,0.04); }
 .sidebar .list li a {
   display: block;
   padding: 8px 10px;
@@ -133,7 +143,7 @@ html, body, .container { overflow-x: hidden; }
 }
 .sidebar .list li a:hover,
 .sidebar .list li a.active {
-  background: #1a1d24;
+  background: rgba(231,79,91,0.12);
 }
 
 /* ---------- Cards & tables ---------- */
@@ -151,9 +161,10 @@ html, body, .container { overflow-x: hidden; }
 
 .card {
   background: var(--card);
-  border: 1px solid #24262b;
+  border: 1px solid rgba(244,210,106,0.18);
   border-radius: var(--radius);
   padding: 12px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.28);
 }
 .card h2 { margin-top: 4px; }
 
@@ -188,18 +199,18 @@ html, body, .container { overflow-x: hidden; }
 
 /* ---------- Links (dark theme) ---------- */
 a:not(.btn){
-  color:#cbd5ff;
+  color:#f4d26a;
   text-decoration:none;
   transition:color .15s ease, border-color .15s ease;
 }
-a:not(.btn):visited{ color:#cbd5ff; }
+a:not(.btn):visited{ color:#f4d26a; }
 a:not(.btn):hover,
 a:not(.btn):focus{
-  color:#ffffff;
+  color:#ffd48a;
   text-decoration:underline;
 }
 .table a:not(.btn){
-  border-bottom:1px dashed rgba(203,213,255,.35);
+  border-bottom:1px dashed rgba(244,210,106,.45);
 }
 .table a:not(.btn):hover{
   border-bottom-color: rgba(255,255,255,.7);
