@@ -1051,6 +1051,9 @@ async def admin_entries(
     request: Request,
     db: Session = Depends(get_db),
     board_slug: Optional[str] = None,
+    player_q: Optional[str] = None,
+    # Accept raw string to avoid FastAPI int parsing errors on blank values from the form.
+    player_id: Optional[str] = None,
     limit: int = 100,
 ):
     me = current_user(request, db)
@@ -1060,6 +1063,16 @@ async def admin_entries(
         raise HTTPException(403, "Admins only")
 
     limit = max(1, min(limit, 500))
+
+    # Parse player_id safely (blank -> None, invalid -> None)
+    player_id_int: Optional[int] = None
+    if player_id is not None:
+        player_id_str = str(player_id).strip()
+        if player_id_str:
+            try:
+                player_id_int = int(player_id_str)
+            except ValueError:
+                player_id_int = None
 
     stmt = (
         select(ScoreEntry, Player, Board)
@@ -1072,6 +1085,15 @@ async def admin_entries(
     if board_slug:
         stmt = stmt.where(Board.slug == board_slug)
 
+    if player_id_int:
+        stmt = stmt.where(Player.id == player_id_int)
+    elif player_q:
+        q = f"%{player_q.lower()}%"
+        stmt = stmt.where(
+            func.lower(Player.name).like(q)
+            | func.lower(Player.email).like(q)
+        )
+
     rows = db.execute(stmt).all()
     entries = [
         {
@@ -1082,6 +1104,11 @@ async def admin_entries(
         for row in rows
     ]
 
+    boards = db.execute(select(Board).order_by(Board.name)).scalars().all()
+    players = (
+        db.execute(select(Player).order_by(Player.name).limit(500)).scalars().all()
+    )
+
     msg = request.query_params.get("msg")
     return templates.TemplateResponse(
         "admin_entries.html",
@@ -1090,7 +1117,11 @@ async def admin_entries(
             "me": me,
             "entries": entries,
             "board_slug": board_slug or "",
+            "player_q": player_q or "",
+            "player_id": player_id_int or "",
             "limit": limit,
+            "boards": boards,
+            "players": players,
             "message": msg,
         },
     )

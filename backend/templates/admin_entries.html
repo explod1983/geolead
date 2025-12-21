@@ -12,10 +12,28 @@
     <div class="flash" style="margin-top:12px;">{{ message }}</div>
   {% endif %}
 
-  <form method="get" action="/admin/entries" style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+  <form id="admin-filter-form" method="get" action="/admin/entries" style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
     <div>
-      <label style="display:block; font-weight:600; margin-bottom:4px;">Board slug</label>
-      <input type="text" name="board_slug" value="{{ board_slug }}" style="padding:8px 10px; border-radius:8px; border:1px solid #2b2e35; background:#0f1116; color:var(--text); min-width:180px;" placeholder="(all boards)" />
+      <label style="display:block; font-weight:600; margin-bottom:4px;">Board</label>
+      <select name="board_slug" style="padding:8px 10px; border-radius:8px; border:1px solid #2b2e35; background:#0f1116; color:var(--text); min-width:180px;">
+        <option value="">All boards</option>
+        {% for b in boards %}
+          <option value="{{ b.slug }}" {% if board_slug == b.slug %}selected{% endif %}>{{ b.name }} ({{ b.slug }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label style="display:block; font-weight:600; margin-bottom:4px;">User (select)</label>
+      <select name="player_id" style="padding:8px 10px; border-radius:8px; border:1px solid #2b2e35; background:#0f1116; color:var(--text); min-width:220px;">
+        <option value="">All users</option>
+        {% for p in players %}
+          <option value="{{ p.id }}" {% if player_id|int == p.id %}selected{% endif %}>{{ p.name }} {% if p.email %}({{ p.email }}){% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label style="display:block; font-weight:600; margin-bottom:4px;">User (search name/email)</label>
+      <input type="text" name="player_q" value="{{ player_q }}" style="padding:8px 10px; border-radius:8px; border:1px solid #2b2e35; background:#0f1116; color:var(--text); min-width:200px;" placeholder="search user" />
     </div>
     <div>
       <label style="display:block; font-weight:600; margin-bottom:4px;">Limit</label>
@@ -23,6 +41,36 @@
     </div>
     <button type="submit" class="btn" style="height:38px;">Apply</button>
   </form>
+
+  <script>
+    (function () {
+      const form = document.getElementById('admin-filter-form');
+      if (!form) return;
+      try {
+        const autos = form.querySelectorAll('select');
+        autos.forEach((el) => {
+          el.addEventListener('change', () => {
+            console.debug('[admin entries] auto-submit triggered for', el.name, el.value);
+            // Defer submit a tick to avoid form state-change quirks.
+            setTimeout(() => {
+              try {
+                if (typeof form.requestSubmit === 'function') {
+                  form.requestSubmit();
+                } else {
+                  form.submit();
+                }
+              } catch (err) {
+                console.error('[admin entries] submit failed', err);
+              }
+            }, 0);
+          });
+        });
+        console.debug('[admin entries] auto-submit wiring complete');
+      } catch (err) {
+        console.error('[admin entries] auto-submit wiring failed', err);
+      }
+    })();
+  </script>
 
   <div style="overflow-x:auto; margin-top:14px;">
     <table class="table compact" style="min-width:820px;">

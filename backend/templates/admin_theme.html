@@ -2,8 +2,18 @@
 
 {% block content %}
 <div class="card" style="max-width: 720px; margin: 2rem auto; padding: 1.5rem;">
-  <h1>Theme Settings</h1>
-  <p>Choose the global theme for all users. Current theme: <strong>{{ current_theme_name|title }}</strong></p>
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+    <div>
+      <h1 style="margin:0;">Admin</h1>
+      <p style="margin:4px 0 0;">Current theme: <strong>{{ current_theme_name|title }}</strong></p>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <a class="btn ghost" href="/admin/entries">Manage entries</a>
+    </div>
+  </div>
+
+  <h2 style="margin-top:18px;">Theme Settings</h2>
+  <p>Choose the global theme for all users.</p>
 
   {% if message %}
     <div class="alert" style="margin: 1rem 0; padding: 0.75rem 1rem; border-radius: 8px; background: #1f2937; color: #e5e7eb;">
