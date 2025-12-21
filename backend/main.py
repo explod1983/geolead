@@ -728,7 +728,7 @@ def query_country_specialists(db: Session) -> list[dict]:
         .join(ScoreEntry, ScoreEntry.id == GeoGame.score_entry_id)
         .join(Player, Player.id == ScoreEntry.player_id)
         .where(GeoRound.target_country.is_not(None), GeoRound.distance_m.is_not(None))
-        .group_by("country", "player_id", "player_name")
+        .group_by(GeoRound.target_country, Player.id, Player.name)
     ).all()
 
     by_country: dict[str, list[dict]] = defaultdict(list)
