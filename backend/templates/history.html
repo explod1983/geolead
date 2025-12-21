@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <div class="card-header">
+    <div>
+      <p class="eyebrow">Weekly winners</p>
+      <h1>History · {{ board.name }}</h1>
+      <p class="muted">Top cumulative scorer per ISO week. Ties break to the earliest playtime.</p>
+    </div>
+    <div class="actions">
+      <a class="btn small ghost" href="/board/{{ board.slug }}">Back to leaderboard</a>
+    </div>
+  </div>
+
+  {% if history %}
+    <table class="table compact history-list">
+      <thead>
+        <tr>
+          <th>Week</th>
+          <th>Date range</th>
+          <th>Winner</th>
+          <th class="num">Total score</th>
+          <th class="num">Entries</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in history %}
+        <tr>
+          <td>{{ row.week_label }}</td>
+          <td>{{ row.week_start }} – {{ row.week_end }}</td>
+          <td>{{ row.winner_name }}</td>
+          <td class="num">{{ row.winner_score }}</td>
+          <td class="num">{{ row.winner_entries }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted">No weekly winners yet. Play some rounds to start the history.</p>
+  {% endif %}
+</section>
+{% endblock %}

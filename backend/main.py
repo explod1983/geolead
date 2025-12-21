@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional, Literal, List
 from urllib.parse import quote_plus
+from collections import defaultdict
 
 from fastapi import FastAPI, Depends, Form, HTTPException, Request, UploadFile, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSONResponse
@@ -705,6 +706,85 @@ async def board_leaderboard(slug: str, request: Request, db: Session = Depends(g
             "is_global": slug == "global",
             "boards": boards,
             "saved": request.query_params.get("saved") == "1",
+        },
+    )
+
+
+@app.get("/board/{slug}/history", response_class=HTMLResponse)
+async def board_weekly_history(slug: str, request: Request, db: Session = Depends(get_db)):
+    if slug == "global":
+        return RedirectResponse(url="/board/global", status_code=303)
+
+    board = get_board_by_slug(db, slug)
+    if not board:
+        raise HTTPException(404, "Board not found")
+
+    rows = db.execute(
+        select(ScoreEntry, Player)
+        .join(Player, ScoreEntry.player_id == Player.id)
+        .where(ScoreEntry.board_id == board.id)
+        .order_by(ScoreEntry.played_at.desc())
+    ).all()
+
+    weeks: dict[tuple[int, int], dict[int, dict[str, object]]] = defaultdict(dict)
+
+    for entry, player in rows:
+        dt = entry.played_at.astimezone(timezone.utc)
+        iso = dt.isocalendar()
+        key = (iso.year, iso.week)
+        player_stats = weeks[key].get(player.id)
+        if not player_stats:
+            weeks[key][player.id] = {
+                "player": player,
+                "score": entry.total_score,
+                "entries": 1,
+                "first_played": dt,
+            }
+        else:
+            player_stats["score"] += entry.total_score
+            player_stats["entries"] += 1
+            if dt < player_stats["first_played"]:
+                player_stats["first_played"] = dt
+
+    history = []
+    for (year, week), per_player in weeks.items():
+        if not per_player:
+            continue
+        winner = max(
+            per_player.values(),
+            key=lambda p: (p["score"], -p["first_played"].timestamp()),
+        )
+        # week start is Monday
+        any_dt = next(iter(per_player.values()))["first_played"]
+        week_start = any_dt - timedelta(days=any_dt.weekday())
+        week_end = week_start + timedelta(days=6)
+        history.append(
+            {
+                "year": year,
+                "week": week,
+                "week_label": f"{year}-W{week:02d}",
+                "week_start": week_start.date(),
+                "week_end": week_end.date(),
+                "winner_name": winner["player"].name,
+                "winner_id": winner["player"].id,
+                "winner_score": winner["score"],
+                "winner_entries": winner["entries"],
+            }
+        )
+
+    history.sort(key=lambda h: (h["year"], h["week"]), reverse=True)
+
+    me = current_user(request, db)
+    boards = get_all_boards(db)
+    return templates.TemplateResponse(
+        "history.html",
+        {
+            "request": request,
+            "me": me,
+            "board": board,
+            "is_global": False,
+            "boards": boards,
+            "history": history,
         },
     )
 

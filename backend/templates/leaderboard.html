@@ -18,7 +18,14 @@
     </aside>
 
     <section class="content">
-      <h1>Leaders &middot; <span class="board-name">{% if is_global %}Global{% else %}{{ board.name }}{% endif %}</span></h1>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+        <h1 style="margin:0;">Leaders &middot; <span class="board-name">{% if is_global %}Global{% else %}{{ board.name }}{% endif %}</span></h1>
+        {% if not is_global and board %}
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a class="btn ghost" href="/board/{{ board.slug }}/history">Weekly winners</a>
+          </div>
+        {% endif %}
+      </div>
 
       <div class="cards cards-2">
         <!-- All time -->
