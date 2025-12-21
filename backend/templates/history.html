@@ -13,7 +13,7 @@
   </div>
 
   {% if history %}
-    <table class="table compact history-list">
+    <table class="table history-summary">
       <thead>
         <tr>
           <th>Week</th>
@@ -24,14 +24,41 @@
         </tr>
       </thead>
       <tbody>
-        {% for row in history %}
-        <tr>
-          <td>{{ row.week_label }}</td>
-          <td>{{ row.week_start }} – {{ row.week_end }}</td>
-          <td>{{ row.winner_name }}</td>
-          <td class="num">{{ row.winner_score }}</td>
-          <td class="num">{{ row.winner_entries }}</td>
-        </tr>
+        {% for week in history %}
+          {% set winner = week.leaderboard[0] if week.leaderboard else None %}
+          <tr class="week-row" data-week="{{ loop.index0 }}">
+            <td>{{ week.week_label }}</td>
+            <td>{{ week.week_start }} – {{ week.week_end }}</td>
+            <td>{% if winner %}<a href="/player/{{ winner.player_id }}">{{ winner.player_name }}</a>{% else %}—{% endif %}</td>
+            <td class="num">{% if winner %}{{ winner.score }}{% else %}—{% endif %}</td>
+            <td class="num">{{ week.leaderboard|length }}</td>
+          </tr>
+          <tr class="week-detail" data-week-detail="{{ loop.index0 }}" hidden>
+            <td colspan="6">
+              <table class="table compact history-list">
+                <thead>
+                  <tr>
+                    <th class="num">#</th>
+                    <th>Player</th>
+                    <th>Time</th>
+                    <th class="num">Total score</th>
+                    <th class="num">Entries</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in week.leaderboard %}
+                  <tr>
+                    <td class="num">{{ loop.index }}</td>
+                    <td><a href="/player/{{ row.player_id }}">{{ row.player_name }}</a></td>
+                    <td class="muted">{{ row.first_played }}</td>
+                    <td class="num">{{ row.score }}</td>
+                    <td class="num">{{ row.entries }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -39,4 +66,24 @@
     <p class="muted">No weekly winners yet. Play some rounds to start the history.</p>
   {% endif %}
 </section>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    function toggleWeek(week) {
+      const detail = document.querySelector(`[data-week-detail="${week}"]`);
+      if (!detail) return;
+      const expanded = !detail.hidden;
+      detail.hidden = expanded;
+    }
+
+    document.querySelectorAll('.week-row').forEach(row => {
+      row.addEventListener('click', (e) => {
+        // allow link clicks inside the row to navigate
+        if (e.target.tagName === 'A') return;
+        const week = row.dataset.week;
+        toggleWeek(week);
+      });
+    });
+  });
+</script>
 {% endblock %}

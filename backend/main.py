@@ -750,14 +750,16 @@ async def board_weekly_history(slug: str, request: Request, db: Session = Depend
     for (year, week), per_player in weeks.items():
         if not per_player:
             continue
-        winner = max(
+
+        leaderboard = sorted(
             per_player.values(),
-            key=lambda p: (p["score"], -p["first_played"].timestamp()),
+            key=lambda p: (-p["score"], p["first_played"].timestamp()),
         )
-        # week start is Monday
-        any_dt = next(iter(per_player.values()))["first_played"]
+
+        any_dt = leaderboard[0]["first_played"]
         week_start = any_dt - timedelta(days=any_dt.weekday())
         week_end = week_start + timedelta(days=6)
+
         history.append(
             {
                 "year": year,
@@ -765,10 +767,16 @@ async def board_weekly_history(slug: str, request: Request, db: Session = Depend
                 "week_label": f"{year}-W{week:02d}",
                 "week_start": week_start.date(),
                 "week_end": week_end.date(),
-                "winner_name": winner["player"].name,
-                "winner_id": winner["player"].id,
-                "winner_score": winner["score"],
-                "winner_entries": winner["entries"],
+                "leaderboard": [
+                    {
+                        "player_name": item["player"].name,
+                        "player_id": item["player"].id,
+                        "score": item["score"],
+                        "entries": item["entries"],
+                        "first_played": item["first_played"].strftime("%Y-%m-%d %H:%M"),
+                    }
+                    for item in leaderboard
+                ],
             }
         )
 
