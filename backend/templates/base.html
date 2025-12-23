@@ -42,10 +42,7 @@
 
         <!-- right -->
         <nav class="nav-right">
-          {% if board and not is_global %}
-            <a class="btn small ghost" href="/board/{{ board.slug }}/today">Today’s round</a>
-            <a class="btn small" href="/board/{{ board.slug }}/submit">Submit</a>
-          {% endif %}
+          {# Board-specific buttons removed; now shown in leaderboard header #}
           <a href="/country-accuracy" class="nav-link{% if request.url.path.startswith('/country-accuracy') %} nav-link-active{% endif %}">Country accuracy</a>
           <a href="/me" class="nav-link">
             My stats{% if me %} · {{ me.name }}{% endif %}

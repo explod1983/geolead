@@ -7,3 +7,4 @@ Rules to check before any task:
 	.\.venv\Scripts\python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
 	(This keeps the single SQLite at C:/Users/explo/Documents/projects/geoguesser/geoguessr.db.)
 5) Before starting a new app instance, ensure no other uvicorn/FastAPI process is running; if one exists, stop it (close the terminal or taskkill /IM uvicorn.exe) instead of launching another.
+6) Only run git status right before committing/pushing, or if the user explicitly asks for it.

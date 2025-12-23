@@ -22,79 +22,16 @@
         <h1 style="margin:0;">Leaders &middot; <span class="board-name">{% if is_global %}Global{% else %}{{ board.name }}{% endif %}</span></h1>
         {% if not is_global and board %}
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <a class="btn ghost" href="/board/{{ board.slug }}/history">Weekly winners</a>
+            <a class="btn ghost board-header-btn" href="/board/{{ board.slug }}/history">Weekly winners</a>
+            <a class="btn ghost board-header-btn" href="/board/{{ board.slug }}/today">Today’s round</a>
+            <a class="btn board-header-btn" href="/board/{{ board.slug }}/submit">Submit</a>
           </div>
         {% endif %}
       </div>
 
-      <div class="cards cards-2">
-        <!-- All time -->
-        <section class="card">
-          <h2>All time</h2>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Player</th>
-                <th class="num">Entries</th>
-                <th class="num">Total</th>
-                <th class="num">Average</th>
-                <th class="num">Max round</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if rows_all|length == 0 %}
-                <tr><td colspan="6" class="muted">No scores yet.</td></tr>
-              {% else %}
-                {% for r in rows_all %}
-                <tr>
-                  <td>{{ r.rank }}</td>
-                  <td><a href="/player/{{ r.player_id }}">{{ r.player_name }}</a></td>
-                  <td class="num">{{ r.count }}</td>
-                  <td class="num">{{ '{:,}'.format(r.total_score) }}</td>
-                  <td class="num">{{ '{:,}'.format(r.average_score|round(0, 'floor')|int) }}</td>
-                  <td class="num">{{ r.max_round }}</td>
-                </tr>
-                {% endfor %}
-              {% endif %}
-            </tbody>
-          </table>
-        </section>
-
-        <!-- This week -->
-        <section class="card">
-          <h2>This week</h2>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Player</th>
-                <th class="num">Entries</th>
-                <th class="num">Total</th>
-                <th class="num">Average</th>
-                <th class="num">Max round</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% if rows_week|length == 0 %}
-                <tr><td colspan="6" class="muted">No scores yet.</td></tr>
-              {% else %}
-                {% for r in rows_week %}
-                <tr>
-                  <td>{{ r.rank }}</td>
-                  <td><a href="/player/{{ r.player_id }}">{{ r.player_name }}</a></td>
-                  <td class="num">{{ r.count }}</td>
-                  <td class="num">{{ '{:,}'.format(r.total_score) }}</td>
-                  <td class="num">{{ '{:,}'.format(r.average_score|round(0, 'floor')|int) }}</td>
-                  <td class="num">{{ r.max_round }}</td>
-                </tr>
-                {% endfor %}
-              {% endif %}
-            </tbody>
-          </table>
-        </section>
-        <!-- Today (full-width) -->
-        <section class="card wide" id="today-card" data-me-id="{{ me.id if me else '' }}">
+      <div class="cards-stack">
+        <!-- Today -->
+        <section class="card" id="today-card" data-me-id="{{ me.id if me else '' }}">
           <h2 style="display:flex;align-items:center;gap:8px;">
             Today
             <span class="share-actions">
@@ -128,6 +65,75 @@
                   <td class="num">{{ r.round3 }}</td>
                   <td class="num">{{ '{:,}'.format(r.total_score) }}</td>
                   <td class="num">{{ '{:,}'.format(r.average_round | round(0, 'floor') | int) }}</td>
+                  <td class="num">{{ r.max_round }}</td>
+                </tr>
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
+        </section>
+
+        <!-- This week -->
+        <section class="card">
+          <h2>This week</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th class="num">Entries</th>
+                <th class="num">Total</th>
+                <th class="num">Average</th>
+                <th class="num">Max round</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if rows_week|length == 0 %}
+                <tr><td colspan="6" class="muted">No scores yet.</td></tr>
+              {% else %}
+                {% for r in rows_week %}
+                <tr>
+                  <td>{{ r.rank if r.rank is not none else '–' }}</td>
+                  <td>
+                    <a href="/player/{{ r.player_id }}">{{ r.player_name }}</a>
+                    {% if r.rank is none %}<span class="badge badge-unranked">Not ranked</span>{% endif %}
+                  </td>
+                  <td class="num">{{ r.count }}</td>
+                  <td class="num">{{ '{:,}'.format(r.total_score) }}</td>
+                  <td class="num">{{ '{:,}'.format(r.average_score|round(0, 'floor')|int) }}</td>
+                  <td class="num">{{ r.max_round }}</td>
+                </tr>
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
+        </section>
+
+        <!-- All time -->
+        <section class="card">
+          <h2>All time</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Player</th>
+                <th class="num">Entries</th>
+                <th class="num">Total</th>
+                <th class="num">Average</th>
+                <th class="num">Max round</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if rows_all|length == 0 %}
+                <tr><td colspan="6" class="muted">No scores yet.</td></tr>
+              {% else %}
+                {% for r in rows_all %}
+                <tr>
+                  <td>{{ r.rank }}</td>
+                  <td><a href="/player/{{ r.player_id }}">{{ r.player_name }}</a></td>
+                  <td class="num">{{ r.count }}</td>
+                  <td class="num">{{ '{:,}'.format(r.total_score) }}</td>
+                  <td class="num">{{ '{:,}'.format(r.average_score|round(0, 'floor')|int) }}</td>
                   <td class="num">{{ r.max_round }}</td>
                 </tr>
                 {% endfor %}

@@ -830,11 +830,12 @@ def query_leaderboard(
     day_rows = day_rows.group_by("pid", "player_name", "day_key").subquery("per_day")
 
     # 2) Aggregate per player over the selected period
+    count_entries = func.count().label("entries")  # distinct days
     agg = (
         select(
             day_rows.c.pid,
             day_rows.c.player_name,
-            func.count().label("entries"),  # distinct days
+            count_entries,
             func.coalesce(func.sum(day_rows.c.day_total), 0).label("total_score"),
             func.avg(day_rows.c.day_total).label("avg_score"),  # average per day
             func.max(day_rows.c.r1).label("max_r1"),
@@ -845,24 +846,47 @@ def query_leaderboard(
             func.coalesce(func.sum(day_rows.c.r3), 0).label("sum_r3"),
         )
         .group_by(day_rows.c.pid, day_rows.c.player_name)
-        .order_by(func.sum(day_rows.c.day_total).desc())
     )
+
+    # Ranking logic per period
+    if period == "all":
+        # Sort ranked players (entries >=5) by average, then total; keep unranked after
+        agg = agg.order_by(func.avg(day_rows.c.day_total).desc(), func.sum(day_rows.c.day_total).desc())
+    else:
+        agg = agg.order_by(func.sum(day_rows.c.day_total).desc())
 
     rows = db.execute(agg).all()
 
+    if period == "all":
+        def sort_key(r):
+            entries = int(r.entries or 0)
+            ranked = entries >= 5
+            avg_score = float(r.avg_score or 0.0)
+            total_score = int(r.total_score or 0)
+            return (0 if ranked else 1, -avg_score, -total_score)
+
+        rows = sorted(rows, key=sort_key)
+
     out: list[dict] = []
-    for idx, r in enumerate(rows, start=1):
+    rank_counter = 0
+    for r in rows:
         best_round = max(
             int(r.max_r1 or 0), int(r.max_r2 or 0), int(r.max_r3 or 0)
         )
         avg_score = float(r.avg_score or 0.0)
         avg_round = avg_score / 3.0  # for Today table
+        entries = int(r.entries or 0)
+        is_ranked = not (period == "all" and entries < 5)
+        rank_val = rank_counter + 1 if is_ranked else None
+        if is_ranked:
+            rank_counter += 1
         out.append(
             {
-                "rank": idx,
+                "rank": rank_val,
+                "is_ranked": is_ranked,
                 "player_id": r.pid,
                 "player_name": r.player_name,
-                "count": int(r.entries or 0),
+                "count": entries,
                 "total_score": int(r.total_score or 0),
                 "average_score": avg_score,
                 "average_round": avg_round,
